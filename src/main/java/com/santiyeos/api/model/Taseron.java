@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Data // create get - set automatically.
 @NoArgsConstructor // create empty constructor
-@AllArgsConstructor // create constructor thathave all fields
+@AllArgsConstructor // create constructor that have all fields
 @Builder // create object more readable
 public class Taseron {
     private Integer taseronId;
