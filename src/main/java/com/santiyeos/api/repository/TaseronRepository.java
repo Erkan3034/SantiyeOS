@@ -14,4 +14,9 @@ public interface TaseronRepository {
     Taseron getir(Integer firmaId, Integer taseronId);
 
     Integer ekle(Integer firmaId, Taseron taseron);
+
+    Integer guncelle(Integer firmaId, Integer taseronId, Taseron taseron);
+
+    Integer sil(Integer firmaId, Integer taseronId, Integer kullaniciId);
+
 }

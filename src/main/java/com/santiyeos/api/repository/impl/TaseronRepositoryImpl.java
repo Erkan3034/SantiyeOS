@@ -23,7 +23,8 @@ public class TaseronRepositoryImpl implements TaseronRepository {
     private final SimpleJdbcCall taseronListeleCall;
     private final SimpleJdbcCall taseronGetirCall;
     private final SimpleJdbcCall taseronEkleCall;
-
+    private final SimpleJdbcCall taseronGuncelleCall;
+    private final SimpleJdbcCall taseronSilCall;
     public TaseronRepositoryImpl(DataSource dataSource) {
         RowMapper<Taseron> taseronRowMapper = this::mapRowToTaseron;
 
@@ -64,6 +65,37 @@ public class TaseronRepositoryImpl implements TaseronRepository {
                         new SqlParameter("p_uzmanlik", Types.VARCHAR)
                 )
                 .returningResultSet("items", (rs, rowNum) -> rs.getInt("taseron_id"));
+
+
+        this.taseronGuncelleCall = new SimpleJdbcCall(dataSource)
+                .withProcedureName("sp_taseron_guncelle")
+                .withoutProcedureColumnMetaDataAccess()
+                .declareParameters(
+                        new SqlParameter("p_taseron_id" , Types.INTEGER),
+                        new SqlParameter("p_firma_id" , Types.INTEGER),
+                        new SqlParameter("p_ad" , Types.VARCHAR),
+                        new SqlParameter("p_vergi_no" , Types.VARCHAR),
+                        new SqlParameter("p_yetkili" , Types.VARCHAR),
+                        new SqlParameter("p_telefon", Types.VARCHAR),
+                        new SqlParameter("p_email", Types.VARCHAR),
+                        new SqlParameter("p_uzmanlik", Types.VARCHAR)
+                )
+                .returningResultSet(
+                        "items",
+                        (rs, rowNum) -> rs.getInt("etkilenen_satir")
+                );
+
+        // Silme SP'si fiziksel delete yapmaz; taseron.aktif = 0 yapar.
+        this.taseronSilCall = new SimpleJdbcCall(dataSource)
+                .withProcedureName("sp_taseron_sil")
+                .withoutProcedureColumnMetaDataAccess()
+                .declareParameters(
+                        new SqlParameter("p_taseron_id", Types.INTEGER),
+                        new SqlParameter("p_firma_id", Types.INTEGER),
+                        new SqlParameter("p_kullanici_id", Types.INTEGER)
+                )
+                .returningResultSet("items", (rs, rowNum) -> rs.getInt("etkilenen_satir"));
+
     }
 
     @Override
@@ -116,6 +148,44 @@ public class TaseronRepositoryImpl implements TaseronRepository {
 
         if (items == null || items.isEmpty()) {
             return null;
+        }
+
+        return items.get(0);
+    }
+
+    @Override
+    public Integer guncelle(Integer firmaId, Integer taseronId, Taseron taseron) {
+        Map<String, Object> result = taseronGuncelleCall.execute(
+                taseronId,
+                firmaId,
+                taseron.getAd(),
+                taseron.getVergiNo(),
+                taseron.getYetkiliAd(),
+                taseron.getTelefon(),
+                taseron.getEmail(),
+                taseron.getUzmanlik()
+        );
+
+        List<Integer> items = (List<Integer>) result.get("items");
+
+        if (items == null || items.isEmpty()) {
+            return 0;
+        }
+        return items.get(0);
+    }
+
+    @Override
+    public Integer sil(Integer firmaId, Integer taseronId, Integer kullaniciId) {
+        Map<String, Object> result = taseronSilCall.execute(
+                taseronId,
+                firmaId,
+                kullaniciId
+        );
+
+        List<Integer> items = (List<Integer>) result.get("items");
+
+        if (items == null || items.isEmpty()) {
+            return 0;
         }
 
         return items.get(0);

@@ -7,7 +7,7 @@ import com.santiyeos.api.service.TaseronService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
+import com.santiyeos.api.dto.request.UpdateTaseronRequest;
 @RestController
 @RequestMapping("/api/taseronlar")
 public class TaseronController {
@@ -43,4 +43,25 @@ public class TaseronController {
     ) {
         return taseronService.ekle(firmaId, request);
     }
+
+
+    @PutMapping("/{taseronId}")
+    public TaseronResponse guncelle(
+            @RequestHeader("X-Firma-Id") Integer firmaId,
+            @PathVariable Integer taseronId,
+            @Valid @RequestBody UpdateTaseronRequest request
+    ) {
+        return taseronService.guncelle(firmaId, taseronId, request);
+    }
+
+    @DeleteMapping("/{taseronId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void sil(
+            @RequestHeader("X-Firma-Id") Integer firmaId,
+            @RequestHeader("X-Kullanici-Id") Integer kullaniciId,
+            @PathVariable Integer taseronId
+    ) {
+        taseronService.sil(firmaId, taseronId, kullaniciId);
+    }
+
 }

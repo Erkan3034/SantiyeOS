@@ -159,6 +159,7 @@ public class GlobalExceptionHandler {
             return "Taşeron adı zorunludur.";
         }
 
+
         if (message.contains("Bu vergi numarasi")) {
             return "Bu vergi numarası ile kayıtlı aktif taşeron zaten var.";
         }
@@ -173,6 +174,10 @@ public class GlobalExceptionHandler {
 
         if (message.contains("Aktif is emirleri olan taseron silinemez")) {
             return "Aktif iş emirleri olan taşeron silinemez.";
+        }
+
+        if (message.contains("Aktif is emirleri olan proje silinemez")) {
+            return "Aktif iş emirleri olan proje silinemez.";
         }
 
         return "Veritabani islemi tamamlanamadi.";

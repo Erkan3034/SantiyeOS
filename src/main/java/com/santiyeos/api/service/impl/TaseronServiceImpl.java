@@ -1,6 +1,7 @@
 package com.santiyeos.api.service.impl;
 
 import com.santiyeos.api.dto.request.CreateTaseronRequest;
+import com.santiyeos.api.dto.request.UpdateTaseronRequest;
 import com.santiyeos.api.dto.response.TaseronResponse;
 import com.santiyeos.api.exception.BusinessException;
 import com.santiyeos.api.model.PageResult;
@@ -48,11 +49,9 @@ public class TaseronServiceImpl implements TaseronService {
     public TaseronResponse getir(Integer firmaId, Integer taseronId) {
         Integer safeFirmaId = validateFirmaId(firmaId);
 
-        if (taseronId == null || taseronId <= 0) {
-            throw BusinessException.badRequest("Geçerli bir taşeron id giriniz.");
-        }
+        Integer safeTaseronId = validateTaseronId(taseronId);
 
-        Taseron taseron = taseronRepository.getir(safeFirmaId, taseronId);
+        Taseron taseron = taseronRepository.getir(safeFirmaId, safeTaseronId);
 
         if (taseron == null) {
             throw BusinessException.notFound("Taşeron bulunamadı.");
@@ -84,6 +83,47 @@ public class TaseronServiceImpl implements TaseronService {
         return getir(safeFirmaId, taseronId);
     }
 
+    @Override
+    public TaseronResponse guncelle(Integer firmaId, Integer taseronId, UpdateTaseronRequest request) {
+        Integer safeFirmaId = validateFirmaId(firmaId);
+        Integer safeTaseronId = validateTaseronId(taseronId);
+
+        Taseron taseron = Taseron.builder()
+                .firmaId(safeFirmaId)
+                .taseronId(safeTaseronId)
+                .ad(request.getAd())
+                .vergiNo(request.getVergiNo())
+                .yetkiliAd(request.getYetkiliAd())
+                .telefon(request.getTelefon())
+                .email(request.getEmail())
+                .uzmanlik(request.getUzmanlik())
+                .build();
+
+        Integer etkilenenSatir = taseronRepository.guncelle(safeFirmaId, safeTaseronId, taseron);
+
+        if (etkilenenSatir == null || etkilenenSatir == 0) {
+            throw BusinessException.notFound("Taşeron bulunamadı.");
+        }
+
+        return getir(safeFirmaId, safeTaseronId);
+    }
+
+
+
+    @Override
+    public void sil(Integer firmaId, Integer taseronId, Integer kullaniciId) {
+        Integer safeFirmaId = validateFirmaId(firmaId);
+        Integer safeTaseronId = validateTaseronId(taseronId);
+        Integer safeKullaniciId = validateKullaniciId(kullaniciId);
+
+        Integer etkilenenSatir = taseronRepository.sil(safeFirmaId, safeTaseronId, safeKullaniciId);
+
+        if (etkilenenSatir == null || etkilenenSatir == 0) {
+            throw BusinessException.notFound("Taşeron bulunamadı.");
+        }
+    }
+
+
     private Integer validateFirmaId(Integer firmaId) {
         if (firmaId == null || firmaId <= 0) {
             throw BusinessException.badRequest("Geçerli bir firma id giriniz.");
@@ -99,6 +139,23 @@ public class TaseronServiceImpl implements TaseronService {
 
         return Math.min(limit, MAX_LIMIT);
     }
+
+    private Integer validateTaseronId(Integer taseronId) {
+        if (taseronId == null || taseronId <= 0) {
+            throw BusinessException.badRequest("Geçerli bir taşeron id giriniz.");
+        }
+
+        return taseronId;
+    }
+
+    private Integer validateKullaniciId(Integer kullaniciId) {
+        if (kullaniciId == null || kullaniciId <= 0) {
+            throw BusinessException.badRequest("Geçerli bir kullanıcı id giriniz.");
+        }
+
+        return kullaniciId;
+    }
+
 
     private TaseronResponse toResponse(Taseron taseron) {
         return TaseronResponse.builder()
