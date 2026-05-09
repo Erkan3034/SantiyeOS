@@ -1,83 +1,96 @@
 package com.santiyeos.api.controller;
 
-import com.santiyeos.api.dto.request.CreateTaseronRequest;
-import com.santiyeos.api.dto.request.UpdateTaseronRequest;
-import com.santiyeos.api.dto.response.TaseronResponse;
+import com.santiyeos.api.dto.request.CreateHakedisRequest;
+import com.santiyeos.api.dto.request.RejectHakedisRequest;
+import com.santiyeos.api.dto.response.HakedisResponse;
 import com.santiyeos.api.model.PageResult;
 import com.santiyeos.api.security.CurrentUser;
 import com.santiyeos.api.security.CurrentUserContext;
-import com.santiyeos.api.service.TaseronService;
+import com.santiyeos.api.service.HakedisService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/taseronlar")
-public class TaseronController {
+@RequestMapping("/api/hakedisler")
+public class HakedisController {
 
-    private final TaseronService taseronService;
+    private final HakedisService hakedisService;
     private final CurrentUserContext currentUserContext;
 
-    public TaseronController(TaseronService taseronService, CurrentUserContext currentUserContext) {
-        this.taseronService = taseronService;
+    public HakedisController(HakedisService hakedisService, CurrentUserContext currentUserContext) {
+        this.hakedisService = hakedisService;
         this.currentUserContext = currentUserContext;
     }
 
     @GetMapping
-    public PageResult<TaseronResponse> listele(
+    public PageResult<HakedisResponse> listele(
             @AuthenticationPrincipal CurrentUser currentUser,
             @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId,
+            @RequestParam(required = false) Integer taseronId,
+            @RequestParam(required = false) String onayDurumu,
             @RequestParam(defaultValue = "20") int limit,
             @RequestParam(defaultValue = "0") int offset
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        return taseronService.listele(firmaId, limit, offset);
+        return hakedisService.listele(firmaId, taseronId, onayDurumu, limit, offset);
     }
 
-    @GetMapping("/{taseronId}")
-    public TaseronResponse getir(
+    @GetMapping("/{hakedisId}")
+    public HakedisResponse getir(
             @AuthenticationPrincipal CurrentUser currentUser,
             @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId,
-            @PathVariable Integer taseronId
+            @PathVariable Integer hakedisId
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        return taseronService.getir(firmaId, taseronId);
+        return hakedisService.getir(firmaId, hakedisId);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public TaseronResponse ekle(
+    public HakedisResponse ekle(
             @AuthenticationPrincipal CurrentUser currentUser,
             @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId,
-            @Valid @RequestBody CreateTaseronRequest request
+            @Valid @RequestBody CreateHakedisRequest request
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        return taseronService.ekle(firmaId, request);
+        Integer kullaniciId = currentUserContext.requireUserId(currentUser);
+        return hakedisService.ekle(firmaId, kullaniciId, request);
     }
 
-
-    @PutMapping("/{taseronId}")
-    public TaseronResponse guncelle(
+    @PatchMapping("/{hakedisId}/onayla")
+    public HakedisResponse onayla(
             @AuthenticationPrincipal CurrentUser currentUser,
             @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId,
-            @PathVariable Integer taseronId,
-            @Valid @RequestBody UpdateTaseronRequest request
+            @PathVariable Integer hakedisId
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        return taseronService.guncelle(firmaId, taseronId, request);
+        Integer kullaniciId = currentUserContext.requireUserId(currentUser);
+        return hakedisService.onayla(firmaId, hakedisId, kullaniciId);
     }
 
-    @DeleteMapping("/{taseronId}")
+    @PatchMapping("/{hakedisId}/reddet")
+    public HakedisResponse reddet(
+            @AuthenticationPrincipal CurrentUser currentUser,
+            @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId,
+            @PathVariable Integer hakedisId,
+            @Valid @RequestBody RejectHakedisRequest request
+    ) {
+        Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
+        Integer kullaniciId = currentUserContext.requireUserId(currentUser);
+        return hakedisService.reddet(firmaId, hakedisId, kullaniciId, request);
+    }
+
+    @DeleteMapping("/{hakedisId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void sil(
             @AuthenticationPrincipal CurrentUser currentUser,
             @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId,
-            @PathVariable Integer taseronId
+            @PathVariable Integer hakedisId
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
         Integer kullaniciId = currentUserContext.requireUserId(currentUser);
-        taseronService.sil(firmaId, taseronId, kullaniciId);
+        hakedisService.sil(firmaId, hakedisId, kullaniciId);
     }
-
 }

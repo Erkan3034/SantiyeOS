@@ -1,82 +1,98 @@
 package com.santiyeos.api.controller;
 
-import com.santiyeos.api.dto.request.CreateProjeRequest;
-import com.santiyeos.api.dto.request.UpdateProjeRequest;
-import com.santiyeos.api.dto.response.ProjeResponse;
+import com.santiyeos.api.dto.request.CreateIsEmriRequest;
+import com.santiyeos.api.dto.request.UpdateIsEmriDurumRequest;
+import com.santiyeos.api.dto.request.UpdateIsEmriRequest;
+import com.santiyeos.api.dto.response.IsEmriResponse;
 import com.santiyeos.api.model.PageResult;
 import com.santiyeos.api.security.CurrentUser;
 import com.santiyeos.api.security.CurrentUserContext;
-import com.santiyeos.api.service.ProjeService;
+import com.santiyeos.api.service.IsEmriService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/projeler")
-public class ProjeController {
+@RequestMapping("/api/is-emirleri")
+public class IsEmriController {
 
-    private final ProjeService projeService;
+    private final IsEmriService isEmriService;
     private final CurrentUserContext currentUserContext;
 
-    public ProjeController(ProjeService projeService, CurrentUserContext currentUserContext) {
-        this.projeService = projeService;
+    public IsEmriController(IsEmriService isEmriService, CurrentUserContext currentUserContext) {
+        this.isEmriService = isEmriService;
         this.currentUserContext = currentUserContext;
     }
 
     @GetMapping
-    public PageResult<ProjeResponse> listele(
+    public PageResult<IsEmriResponse> listele(
             @AuthenticationPrincipal CurrentUser currentUser,
             @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId,
+            @RequestParam(required = false) Integer projeId,
             @RequestParam(required = false) String durum,
             @RequestParam(defaultValue = "20") int limit,
             @RequestParam(defaultValue = "0") int offset
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        return projeService.listele(firmaId, durum, limit, offset);
+        return isEmriService.listele(firmaId, projeId, durum, limit, offset);
     }
 
-    @GetMapping("/{projeId}")
-    public ProjeResponse getir(
+    @GetMapping("/{isEmriId}")
+    public IsEmriResponse getir(
             @AuthenticationPrincipal CurrentUser currentUser,
             @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId,
-            @PathVariable Integer projeId
+            @PathVariable Integer isEmriId
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        return projeService.getir(firmaId, projeId);
+        return isEmriService.getir(firmaId, isEmriId);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ProjeResponse ekle(
+    public IsEmriResponse ekle(
             @AuthenticationPrincipal CurrentUser currentUser,
             @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId,
-            @Valid @RequestBody CreateProjeRequest request
+            @Valid @RequestBody CreateIsEmriRequest request
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        return projeService.ekle(firmaId, request);
+        Integer kullaniciId = currentUserContext.requireUserId(currentUser);
+        return isEmriService.ekle(firmaId, kullaniciId, request);
     }
 
-    @PutMapping("/{projeId}")
-    public ProjeResponse guncelle(
+    @PutMapping("/{isEmriId}")
+    public IsEmriResponse guncelle(
             @AuthenticationPrincipal CurrentUser currentUser,
             @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId,
-            @PathVariable Integer projeId,
-            @Valid @RequestBody UpdateProjeRequest request
+            @PathVariable Integer isEmriId,
+            @Valid @RequestBody UpdateIsEmriRequest request
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        return projeService.guncelle(firmaId, projeId, request);
+        Integer kullaniciId = currentUserContext.requireUserId(currentUser);
+        return isEmriService.guncelle(firmaId, isEmriId, kullaniciId, request);
     }
 
-    @DeleteMapping("/{projeId}")
+    @PatchMapping("/{isEmriId}/durum")
+    public IsEmriResponse durumGuncelle(
+            @AuthenticationPrincipal CurrentUser currentUser,
+            @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId,
+            @PathVariable Integer isEmriId,
+            @Valid @RequestBody UpdateIsEmriDurumRequest request
+    ) {
+        Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
+        Integer kullaniciId = currentUserContext.requireUserId(currentUser);
+        return isEmriService.durumGuncelle(firmaId, isEmriId, kullaniciId, request);
+    }
+
+    @DeleteMapping("/{isEmriId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void sil(
             @AuthenticationPrincipal CurrentUser currentUser,
             @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId,
-            @PathVariable Integer projeId
+            @PathVariable Integer isEmriId
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
         Integer kullaniciId = currentUserContext.requireUserId(currentUser);
-        projeService.sil(firmaId, projeId, kullaniciId);
+        isEmriService.sil(firmaId, isEmriId, kullaniciId);
     }
 }

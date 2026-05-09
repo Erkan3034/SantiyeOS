@@ -1,83 +1,71 @@
 package com.santiyeos.api.controller;
 
-import com.santiyeos.api.dto.request.CreateTaseronRequest;
-import com.santiyeos.api.dto.request.UpdateTaseronRequest;
-import com.santiyeos.api.dto.response.TaseronResponse;
+import com.santiyeos.api.dto.request.CreateOdemeRequest;
+import com.santiyeos.api.dto.response.OdemeResponse;
 import com.santiyeos.api.model.PageResult;
 import com.santiyeos.api.security.CurrentUser;
 import com.santiyeos.api.security.CurrentUserContext;
-import com.santiyeos.api.service.TaseronService;
+import com.santiyeos.api.service.OdemeService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/taseronlar")
-public class TaseronController {
+@RequestMapping("/api/odemeler")
+public class OdemeController {
 
-    private final TaseronService taseronService;
+    private final OdemeService odemeService;
     private final CurrentUserContext currentUserContext;
 
-    public TaseronController(TaseronService taseronService, CurrentUserContext currentUserContext) {
-        this.taseronService = taseronService;
+    public OdemeController(OdemeService odemeService, CurrentUserContext currentUserContext) {
+        this.odemeService = odemeService;
         this.currentUserContext = currentUserContext;
     }
 
     @GetMapping
-    public PageResult<TaseronResponse> listele(
+    public PageResult<OdemeResponse> listele(
             @AuthenticationPrincipal CurrentUser currentUser,
             @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId,
+            @RequestParam(required = false) Integer hakedisId,
             @RequestParam(defaultValue = "20") int limit,
             @RequestParam(defaultValue = "0") int offset
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        return taseronService.listele(firmaId, limit, offset);
+        return odemeService.listele(firmaId, hakedisId, limit, offset);
     }
 
-    @GetMapping("/{taseronId}")
-    public TaseronResponse getir(
+    @GetMapping("/{odemeId}")
+    public OdemeResponse getir(
             @AuthenticationPrincipal CurrentUser currentUser,
             @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId,
-            @PathVariable Integer taseronId
+            @PathVariable Integer odemeId
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        return taseronService.getir(firmaId, taseronId);
+        return odemeService.getir(firmaId, odemeId);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public TaseronResponse ekle(
+    public OdemeResponse ekle(
             @AuthenticationPrincipal CurrentUser currentUser,
             @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId,
-            @Valid @RequestBody CreateTaseronRequest request
+            @Valid @RequestBody CreateOdemeRequest request
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        return taseronService.ekle(firmaId, request);
+        Integer kullaniciId = currentUserContext.requireUserId(currentUser);
+        return odemeService.ekle(firmaId, kullaniciId, request);
     }
 
-
-    @PutMapping("/{taseronId}")
-    public TaseronResponse guncelle(
-            @AuthenticationPrincipal CurrentUser currentUser,
-            @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId,
-            @PathVariable Integer taseronId,
-            @Valid @RequestBody UpdateTaseronRequest request
-    ) {
-        Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        return taseronService.guncelle(firmaId, taseronId, request);
-    }
-
-    @DeleteMapping("/{taseronId}")
+    @DeleteMapping("/{odemeId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void sil(
             @AuthenticationPrincipal CurrentUser currentUser,
             @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId,
-            @PathVariable Integer taseronId
+            @PathVariable Integer odemeId
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
         Integer kullaniciId = currentUserContext.requireUserId(currentUser);
-        taseronService.sil(firmaId, taseronId, kullaniciId);
+        odemeService.sil(firmaId, odemeId, kullaniciId);
     }
-
 }
