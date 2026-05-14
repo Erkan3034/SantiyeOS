@@ -11,6 +11,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+
 
 @RestController
 @RequestMapping("/api/hakedisler")
@@ -24,6 +26,7 @@ public class HakedisController {
         this.currentUserContext = currentUserContext;
     }
 
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI, T(com.santiyeos.api.security.Roles).SAHA_PERSONELI, T(com.santiyeos.api.security.Roles).TASERON_TEMSILCI)")
     @GetMapping
     public PageResult<HakedisResponse> listele(
             @AuthenticationPrincipal CurrentUser currentUser,
@@ -37,6 +40,7 @@ public class HakedisController {
         return hakedisService.listele(firmaId, taseronId, onayDurumu, limit, offset);
     }
 
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI, T(com.santiyeos.api.security.Roles).SAHA_PERSONELI, T(com.santiyeos.api.security.Roles).TASERON_TEMSILCI)")
     @GetMapping("/{hakedisId}")
     public HakedisResponse getir(
             @AuthenticationPrincipal CurrentUser currentUser,
@@ -47,6 +51,9 @@ public class HakedisController {
         return hakedisService.getir(firmaId, hakedisId);
     }
 
+
+
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI, T(com.santiyeos.api.security.Roles).TASERON_TEMSILCI)")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public HakedisResponse ekle(
@@ -59,6 +66,8 @@ public class HakedisController {
         return hakedisService.ekle(firmaId, kullaniciId, request);
     }
 
+
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI)")
     @PatchMapping("/{hakedisId}/onayla")
     public HakedisResponse onayla(
             @AuthenticationPrincipal CurrentUser currentUser,
@@ -70,6 +79,8 @@ public class HakedisController {
         return hakedisService.onayla(firmaId, hakedisId, kullaniciId);
     }
 
+
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI)")
     @PatchMapping("/{hakedisId}/reddet")
     public HakedisResponse reddet(
             @AuthenticationPrincipal CurrentUser currentUser,
@@ -82,6 +93,7 @@ public class HakedisController {
         return hakedisService.reddet(firmaId, hakedisId, kullaniciId, request);
     }
 
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN)")
     @DeleteMapping("/{hakedisId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void sil(

@@ -11,6 +11,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+
 
 @RestController
 @RequestMapping("/api/taseronlar")
@@ -23,7 +25,7 @@ public class TaseronController {
         this.taseronService = taseronService;
         this.currentUserContext = currentUserContext;
     }
-
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI, T(com.santiyeos.api.security.Roles).SAHA_PERSONELI)")
     @GetMapping
     public PageResult<TaseronResponse> listele(
             @AuthenticationPrincipal CurrentUser currentUser,
@@ -35,6 +37,8 @@ public class TaseronController {
         return taseronService.listele(firmaId, limit, offset);
     }
 
+
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI, T(com.santiyeos.api.security.Roles).SAHA_PERSONELI)")
     @GetMapping("/{taseronId}")
     public TaseronResponse getir(
             @AuthenticationPrincipal CurrentUser currentUser,
@@ -45,6 +49,7 @@ public class TaseronController {
         return taseronService.getir(firmaId, taseronId);
     }
 
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN)")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TaseronResponse ekle(
@@ -56,7 +61,7 @@ public class TaseronController {
         return taseronService.ekle(firmaId, request);
     }
 
-
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN)")
     @PutMapping("/{taseronId}")
     public TaseronResponse guncelle(
             @AuthenticationPrincipal CurrentUser currentUser,
@@ -68,6 +73,8 @@ public class TaseronController {
         return taseronService.guncelle(firmaId, taseronId, request);
     }
 
+
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN)")
     @DeleteMapping("/{taseronId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void sil(

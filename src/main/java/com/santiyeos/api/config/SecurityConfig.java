@@ -10,8 +10,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+
 
 @Configuration
+@EnableMethodSecurity // bize controller/service metodlaırnın üstüne Rol tanım kontrolü yazma hakkı verir(hasRole("FIRMA_ADMIN))
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;

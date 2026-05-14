@@ -10,6 +10,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+
 
 @RestController
 @RequestMapping("/api/odemeler")
@@ -23,6 +25,7 @@ public class OdemeController {
         this.currentUserContext = currentUserContext;
     }
 
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI, T(com.santiyeos.api.security.Roles).SAHA_PERSONELI)")
     @GetMapping
     public PageResult<OdemeResponse> listele(
             @AuthenticationPrincipal CurrentUser currentUser,
@@ -35,6 +38,7 @@ public class OdemeController {
         return odemeService.listele(firmaId, hakedisId, limit, offset);
     }
 
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI, T(com.santiyeos.api.security.Roles).SAHA_PERSONELI)")
     @GetMapping("/{odemeId}")
     public OdemeResponse getir(
             @AuthenticationPrincipal CurrentUser currentUser,
@@ -45,6 +49,8 @@ public class OdemeController {
         return odemeService.getir(firmaId, odemeId);
     }
 
+
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN)")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public OdemeResponse ekle(
@@ -57,6 +63,8 @@ public class OdemeController {
         return odemeService.ekle(firmaId, kullaniciId, request);
     }
 
+
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN)")
     @DeleteMapping("/{odemeId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void sil(

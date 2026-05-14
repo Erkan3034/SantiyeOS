@@ -28,6 +28,6 @@ public class CurrentUser {
     }
 
     public boolean isSuperAdmin() {
-        return "SUPER_ADMIN".equals(rol);
+        return Roles.SUPER_ADMIN.equals(rol); // rol check
     }
 }

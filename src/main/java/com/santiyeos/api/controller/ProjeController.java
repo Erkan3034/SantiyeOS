@@ -11,7 +11,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.security.access.prepost.PreAuthorize;
 @RestController
 @RequestMapping("/api/projeler")
 public class ProjeController {
@@ -24,6 +24,7 @@ public class ProjeController {
         this.currentUserContext = currentUserContext;
     }
 
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI, T(com.santiyeos.api.security.Roles).SAHA_PERSONELI)")
     @GetMapping
     public PageResult<ProjeResponse> listele(
             @AuthenticationPrincipal CurrentUser currentUser,
@@ -36,6 +37,8 @@ public class ProjeController {
         return projeService.listele(firmaId, durum, limit, offset);
     }
 
+
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI, T(com.santiyeos.api.security.Roles).SAHA_PERSONELI)")
     @GetMapping("/{projeId}")
     public ProjeResponse getir(
             @AuthenticationPrincipal CurrentUser currentUser,
@@ -46,6 +49,8 @@ public class ProjeController {
         return projeService.getir(firmaId, projeId);
     }
 
+
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN)")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ProjeResponse ekle(
@@ -57,6 +62,8 @@ public class ProjeController {
         return projeService.ekle(firmaId, request);
     }
 
+
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN)")
     @PutMapping("/{projeId}")
     public ProjeResponse guncelle(
             @AuthenticationPrincipal CurrentUser currentUser,
@@ -68,6 +75,8 @@ public class ProjeController {
         return projeService.guncelle(firmaId, projeId, request);
     }
 
+
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN)")
     @DeleteMapping("/{projeId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void sil(

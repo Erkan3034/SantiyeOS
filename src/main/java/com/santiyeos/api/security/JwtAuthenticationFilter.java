@@ -12,6 +12,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+// authorization tooken oku, guvenlisyse spring securitye al
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 

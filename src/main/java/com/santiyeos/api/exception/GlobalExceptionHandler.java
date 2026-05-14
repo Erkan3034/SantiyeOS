@@ -13,6 +13,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -79,6 +80,26 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(error);
     }
 
+
+    //yetkilendirme hataları
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDeniedException(
+            AccessDeniedException exception,
+            HttpServletRequest request
+    ) {
+        ApiError error = new ApiError(
+                LocalDateTime.now(),
+                HttpStatus.FORBIDDEN.value(),
+                HttpStatus.FORBIDDEN.getReasonPhrase(),
+                "Bu işlem için yetkiniz yok.",
+                request.getRequestURI(),
+                List.of()
+        );
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<ApiError> handleDataAccessException(
             DataAccessException exception,
@@ -121,6 +142,17 @@ public class GlobalExceptionHandler {
     }
 
     private HttpStatus resolveDatabaseStatus(DataAccessException exception) {
+        String databaseMessage = "";
+
+        Throwable rootCause = exception.getMostSpecificCause();
+        if (rootCause != null && rootCause.getMessage() != null) {
+            databaseMessage = rootCause.getMessage();
+        }
+
+        if (databaseMessage.contains("Yetkisiz islem")) {
+            return HttpStatus.FORBIDDEN;
+        }
+
         if (exception instanceof DataAccessResourceFailureException) {
             return HttpStatus.SERVICE_UNAVAILABLE;
         }
@@ -135,6 +167,7 @@ public class GlobalExceptionHandler {
 
         return HttpStatus.BAD_REQUEST;
     }
+
 
     private String resolveDatabaseMessage(DataAccessException exception) {
         Throwable rootCause = exception.getMostSpecificCause();
