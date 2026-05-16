@@ -39,6 +39,7 @@ public class IsEmriRepositoryImpl implements IsEmriRepository {
                 .declareParameters(
                         new SqlParameter("p_firma_id", Types.INTEGER),
                         new SqlParameter("p_proje_id", Types.INTEGER),
+                        new SqlParameter("p_taseron_id", Types.INTEGER),
                         new SqlParameter("p_durum", Types.VARCHAR),
                         new SqlParameter("p_limit", Types.INTEGER),
                         new SqlParameter("p_offset", Types.INTEGER),
@@ -51,7 +52,8 @@ public class IsEmriRepositoryImpl implements IsEmriRepository {
                 .withoutProcedureColumnMetaDataAccess()
                 .declareParameters(
                         new SqlParameter("p_is_emri_id", Types.INTEGER),
-                        new SqlParameter("p_firma_id", Types.INTEGER)
+                        new SqlParameter("p_firma_id", Types.INTEGER),
+                        new SqlParameter("p_taseron_id", Types.INTEGER)
                 )
                 .returningResultSet("items", isEmriRowMapper);
 
@@ -111,9 +113,25 @@ public class IsEmriRepositoryImpl implements IsEmriRepository {
                 .returningResultSet("items", (rs, rowNum) -> rs.getInt("etkilenen_satir"));
     }
 
+
     @Override
-    public PageResult<IsEmri> listele(Integer firmaId, Integer projeId, String durum, int limit, int offset) {
-        Map<String, Object> result = isEmriListeleCall.execute(firmaId, projeId, durum, limit, offset);
+    public PageResult<IsEmri> listele(
+            Integer firmaId,
+            Integer projeId,
+            Integer taseronId,
+            String durum,
+            int limit,
+            int offset
+    ) {
+        Map<String, Object> result = isEmriListeleCall.execute(
+                firmaId,
+                projeId,
+                taseronId,
+                durum,
+                limit,
+                offset
+        );
+
         List<IsEmri> items = getItems(result);
         Integer total = (Integer) result.get("p_toplam");
 
@@ -121,8 +139,8 @@ public class IsEmriRepositoryImpl implements IsEmriRepository {
     }
 
     @Override
-    public IsEmri getir(Integer firmaId, Integer isEmriId) {
-        Map<String, Object> result = isEmriGetirCall.execute(isEmriId, firmaId);
+    public IsEmri getir(Integer firmaId, Integer taseronId, Integer isEmriId) {
+        Map<String, Object> result = isEmriGetirCall.execute(isEmriId, firmaId, taseronId);
         List<IsEmri> items = getItems(result);
 
         if (items.isEmpty()) {

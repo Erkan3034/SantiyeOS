@@ -30,4 +30,8 @@ public class CurrentUser {
     public boolean isSuperAdmin() {
         return Roles.SUPER_ADMIN.equals(rol); // rol check
     }
+
+    public boolean isTaseronTemsilci(){
+        return Roles.TASERON_TEMSILCI.equals(rol);
+    }
 }

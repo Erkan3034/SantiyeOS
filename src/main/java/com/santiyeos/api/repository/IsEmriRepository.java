@@ -5,9 +5,9 @@ import com.santiyeos.api.model.PageResult;
 
 public interface IsEmriRepository {
 
-    PageResult<IsEmri> listele(Integer firmaId, Integer projeId, String durum, int limit, int offset);
+    PageResult<IsEmri> listele(Integer firmaId, Integer projeId, Integer taseronId, String durum, int limit, int offset);
 
-    IsEmri getir(Integer firmaId, Integer isEmriId);
+    IsEmri getir(Integer firmaId, Integer taseronId, Integer isEmriId);
 
     Integer ekle(Integer firmaId, Integer olusturanId, IsEmri isEmri);
 

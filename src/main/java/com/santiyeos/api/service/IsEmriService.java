@@ -8,9 +8,9 @@ import com.santiyeos.api.model.PageResult;
 
 public interface IsEmriService {
 
-    PageResult<IsEmriResponse> listele(Integer firmaId, Integer projeId, String durum, int limit, int offset);
+    PageResult<IsEmriResponse> listele(Integer firmaId, Integer projeId, Integer taseronId, String durum, int limit, int offset);
 
-    IsEmriResponse getir(Integer firmaId, Integer isEmriId);
+    IsEmriResponse getir(Integer firmaId, Integer taseronId, Integer isEmriId);
 
     IsEmriResponse ekle(Integer firmaId, Integer kullaniciId, CreateIsEmriRequest request);
 

@@ -34,14 +34,22 @@ public class IsEmriServiceImpl implements IsEmriService {
     }
 
     @Override
-    public PageResult<IsEmriResponse> listele(Integer firmaId, Integer projeId, String durum, int limit, int offset) {
+    public PageResult<IsEmriResponse> listele(Integer firmaId, Integer projeId,Integer taseronId, String durum, int limit, int offset) {
         Integer safeFirmaId = validateFirmaId(firmaId);
         Integer safeProjeId = validateOptionalPositive(projeId, "Geçerli bir proje id giriniz.");
+        Integer safeTaseronId = validateOptionalPositive(taseronId, "Geçerli bir taşeron id giriniz.");
         String safeDurum = normalizeDurum(durum, LISTE_DURUMLARI, true);
         int safeLimit = normalizeLimit(limit);
         int safeOffset = Math.max(offset, 0);
 
-        PageResult<IsEmri> result = isEmriRepository.listele(safeFirmaId, safeProjeId, safeDurum, safeLimit, safeOffset);
+        PageResult<IsEmri> result = isEmriRepository.listele(
+                safeFirmaId,
+                safeProjeId,
+                safeTaseronId,
+                safeDurum,
+                safeLimit,
+                safeOffset
+        );
 
         List<IsEmriResponse> responseItems = result.getItems()
                 .stream()
@@ -52,11 +60,12 @@ public class IsEmriServiceImpl implements IsEmriService {
     }
 
     @Override
-    public IsEmriResponse getir(Integer firmaId, Integer isEmriId) {
+    public IsEmriResponse getir(Integer firmaId, Integer taseronId, Integer isEmriId) {
         Integer safeFirmaId = validateFirmaId(firmaId);
         Integer safeIsEmriId = validateIsEmriId(isEmriId);
+        Integer safeTaseronId = validateOptionalPositive(taseronId, "Geçerli bir taşeron id giriniz.");
 
-        IsEmri isEmri = isEmriRepository.getir(safeFirmaId, safeIsEmriId);
+        IsEmri isEmri = isEmriRepository.getir(safeFirmaId,safeTaseronId, safeIsEmriId);
 
         if (isEmri == null) {
             throw BusinessException.notFound("İş emri bulunamadı.");
@@ -90,7 +99,7 @@ public class IsEmriServiceImpl implements IsEmriService {
             throw BusinessException.conflict("İş emri oluşturuldu ancak id alınamadı.");
         }
 
-        return getir(safeFirmaId, isEmriId);
+        return getir(safeFirmaId,null, isEmriId);
     }
 
     @Override
@@ -115,7 +124,7 @@ public class IsEmriServiceImpl implements IsEmriService {
             throw BusinessException.notFound("İş emri bulunamadı.");
         }
 
-        return getir(safeFirmaId, safeIsEmriId);
+        return getir(safeFirmaId,null, safeIsEmriId);
     }
 
     @Override
@@ -137,7 +146,7 @@ public class IsEmriServiceImpl implements IsEmriService {
             throw BusinessException.notFound("İş emri bulunamadı.");
         }
 
-        return getir(safeFirmaId, safeIsEmriId);
+        return getir(safeFirmaId,null, safeIsEmriId);
     }
 
     @Override

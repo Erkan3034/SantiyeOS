@@ -32,12 +32,14 @@ public class IsEmriController {
             @AuthenticationPrincipal CurrentUser currentUser,
             @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId,
             @RequestParam(required = false) Integer projeId,
+            @RequestParam(required = false) Integer taseronId,
             @RequestParam(required = false) String durum,
             @RequestParam(defaultValue = "20") int limit,
             @RequestParam(defaultValue = "0") int offset
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        return isEmriService.listele(firmaId, projeId, durum, limit, offset);
+        Integer scopedTaseronId = currentUserContext.resolveTaseronScope(currentUser, taseronId);
+        return isEmriService.listele(firmaId, projeId,scopedTaseronId, durum, limit, offset);
     }
 
 
@@ -49,7 +51,8 @@ public class IsEmriController {
             @PathVariable Integer isEmriId
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        return isEmriService.getir(firmaId, isEmriId);
+        Integer scopedTaseronId = currentUserContext.resolveTaseronScope(currentUser,null);
+        return isEmriService.getir(firmaId,scopedTaseronId, isEmriId);
     }
 
 

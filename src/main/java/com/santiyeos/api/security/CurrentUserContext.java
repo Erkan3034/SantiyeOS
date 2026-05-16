@@ -39,4 +39,27 @@ public class CurrentUserContext {
 
         return tokenFirmaId;
     }
+
+
+    public Integer resolveTaseronScope(CurrentUser currentUser, Integer requestedTaseronId){
+        requireUserId(currentUser);
+
+        if(!currentUser.isTaseronTemsilci()){
+            return requestedTaseronId;
+        }
+
+        Integer tokenTaseronId = currentUser.getTaseronId();
+
+        if(tokenTaseronId == null || tokenTaseronId <=0){
+            throw BusinessException.badRequest("Taşeron kullanıcısının taseron bilfisi bulunamadı.");
+
+        }
+
+        if (requestedTaseronId != null && !requestedTaseronId.equals(tokenTaseronId)) {
+            throw BusinessException.badRequest("Token taşeronn bilgisi ile istek taşeron bilgisi eşleşmiyor!");
+
+        }
+
+        return tokenTaseronId;
+    }
 }
