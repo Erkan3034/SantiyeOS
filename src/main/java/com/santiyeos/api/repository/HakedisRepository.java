@@ -7,7 +7,7 @@ public interface HakedisRepository {
 
     PageResult<Hakedis> listele(Integer firmaId, Integer taseronId, String onayDurumu, int limit, int offset);
 
-    Hakedis getir(Integer firmaId, Integer hakedisId);
+    Hakedis getir(Integer firmaId,Integer taseronId, Integer hakedisId);
 
     Integer ekle(Integer firmaId, Integer talepEdenId, Hakedis hakedis);
 

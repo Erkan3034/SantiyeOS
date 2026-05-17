@@ -9,7 +9,7 @@ public interface HakedisService {
 
     PageResult<HakedisResponse> listele(Integer firmaId, Integer taseronId, String onayDurumu, int limit, int offset);
 
-    HakedisResponse getir(Integer firmaId, Integer hakedisId);
+    HakedisResponse getir(Integer firmaId,Integer taseronId, Integer hakedisId);
 
     HakedisResponse ekle(Integer firmaId, Integer kullaniciId, CreateHakedisRequest request);
 

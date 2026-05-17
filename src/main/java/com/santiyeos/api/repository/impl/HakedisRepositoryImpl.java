@@ -49,7 +49,8 @@ public class HakedisRepositoryImpl implements HakedisRepository {
                 .withoutProcedureColumnMetaDataAccess()
                 .declareParameters(
                         new SqlParameter("p_hakedis_id", Types.INTEGER),
-                        new SqlParameter("p_firma_id", Types.INTEGER)
+                        new SqlParameter("p_firma_id", Types.INTEGER),
+                        new SqlParameter("p_taseron_id", Types.INTEGER)
                 )
                 .returningResultSet("items", hakedisRowMapper);
 
@@ -107,8 +108,8 @@ public class HakedisRepositoryImpl implements HakedisRepository {
     }
 
     @Override
-    public Hakedis getir(Integer firmaId, Integer hakedisId) {
-        Map<String, Object> result = hakedisGetirCall.execute(hakedisId, firmaId);
+    public Hakedis getir(Integer firmaId,Integer taseronId, Integer hakedisId) {
+        Map<String, Object> result = hakedisGetirCall.execute(hakedisId, firmaId,taseronId);
         List<Hakedis> items = getItems(result);
 
         if (items.isEmpty()) {

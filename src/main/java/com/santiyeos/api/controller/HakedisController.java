@@ -37,8 +37,11 @@ public class HakedisController {
             @RequestParam(defaultValue = "0") int offset
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        return hakedisService.listele(firmaId, taseronId, onayDurumu, limit, offset);
+        Integer scopedTaseronId = currentUserContext.resolveTaseronScope(currentUser, taseronId);
+        return hakedisService.listele(firmaId, scopedTaseronId, onayDurumu, limit, offset);
     }
+
+
 
     @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI, T(com.santiyeos.api.security.Roles).SAHA_PERSONELI, T(com.santiyeos.api.security.Roles).TASERON_TEMSILCI)")
     @GetMapping("/{hakedisId}")
@@ -47,8 +50,10 @@ public class HakedisController {
             @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId,
             @PathVariable Integer hakedisId
     ) {
+
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        return hakedisService.getir(firmaId, hakedisId);
+        Integer scopedTaseronId = currentUserContext.resolveTaseronScope(currentUser, null);
+        return hakedisService.getir(firmaId,scopedTaseronId, hakedisId);
     }
 
 
@@ -62,6 +67,7 @@ public class HakedisController {
             @Valid @RequestBody CreateHakedisRequest request
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
+        currentUserContext.resolveTaseronScope(currentUser,null);
         Integer kullaniciId = currentUserContext.requireUserId(currentUser);
         return hakedisService.ekle(firmaId, kullaniciId, request);
     }

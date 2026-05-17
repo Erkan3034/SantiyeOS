@@ -53,11 +53,12 @@ public class HakedisServiceImpl implements HakedisService {
     }
 
     @Override
-    public HakedisResponse getir(Integer firmaId, Integer hakedisId) {
+    public HakedisResponse getir(Integer firmaId,Integer taseronId, Integer hakedisId) {
         Integer safeFirmaId = validateFirmaId(firmaId);
+        Integer safeTaseronId = validateOptionalPositive(taseronId, "Geçerli bir taseron ID giriniz.");
         Integer safeHakedisId = validateHakedisId(hakedisId);
 
-        Hakedis hakedis = hakedisRepository.getir(safeFirmaId, safeHakedisId);
+        Hakedis hakedis = hakedisRepository.getir(safeFirmaId,safeTaseronId, safeHakedisId);
 
         if (hakedis == null) {
             throw BusinessException.notFound("Hakediş bulunamadı.");
@@ -85,7 +86,7 @@ public class HakedisServiceImpl implements HakedisService {
             throw BusinessException.conflict("Hakediş oluşturuldu ancak id alınamadı.");
         }
 
-        return getir(safeFirmaId, hakedisId);
+        return getir(safeFirmaId,null, hakedisId);
     }
 
     @Override
@@ -100,7 +101,7 @@ public class HakedisServiceImpl implements HakedisService {
             throw BusinessException.notFound("Hakediş bulunamadı.");
         }
 
-        return getir(safeFirmaId, safeHakedisId);
+        return getir(safeFirmaId,null, safeHakedisId);
     }
 
     @Override
@@ -120,7 +121,7 @@ public class HakedisServiceImpl implements HakedisService {
             throw BusinessException.notFound("Hakediş bulunamadı.");
         }
 
-        return getir(safeFirmaId, safeHakedisId);
+        return getir(safeFirmaId,null, safeHakedisId);
     }
 
     @Override
