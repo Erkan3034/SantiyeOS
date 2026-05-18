@@ -9,7 +9,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
+import org.springframework.http.HttpStatus;
 import java.io.IOException;
 
 // authorization tooken oku, guvenlisyse spring securitye al
@@ -17,9 +17,16 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final SecurityErrorResponseWriter errorResponseWriter;
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
+    public JwtAuthenticationFilter(
+            JwtService jwtService,
+            SecurityErrorResponseWriter errorResponseWriter
+    )
+    {
+
         this.jwtService = jwtService;
+        this.errorResponseWriter = errorResponseWriter;
     }
 
     @Override
@@ -49,7 +56,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } catch (JwtException | IllegalArgumentException exception) {
             SecurityContextHolder.clearContext();
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Geçersiz veya süresi dolmuş token.");
+            errorResponseWriter.write(
+                    response,
+                    request.getRequestURI(),
+                    HttpStatus.UNAUTHORIZED,
+                    "Geçersiz veya süresi dolmuş token."
+            );
+            return;
         }
     }
 
