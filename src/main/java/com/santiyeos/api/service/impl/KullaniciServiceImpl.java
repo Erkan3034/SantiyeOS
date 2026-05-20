@@ -112,6 +112,7 @@ public class KullaniciServiceImpl implements KullaniciService {
                 .taseronId(request.getTaseronId())
                 .ad(request.getAd())
                 .soyad(request.getSoyad())
+                .email(request.getEmail())
                 .telefon(request.getTelefon())
                 .rol(safeRol)
                 .aktif(request.getAktif())
@@ -222,6 +223,8 @@ public class KullaniciServiceImpl implements KullaniciService {
                 .sonGiris(kullanici.getSonGiris())
                 .createdAt(kullanici.getCreatedAt())
                 .updatedAt(kullanici.getUpdatedAt())
+                .firmaAd(kullanici.getFirmaAd())
+                .taseronAd(kullanici.getTaseronAd())
                 .build();
     }
 }

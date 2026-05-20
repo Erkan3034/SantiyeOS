@@ -304,6 +304,30 @@ public class GlobalExceptionHandler {
             return "Ödeme tutarı hakediş tutarını aşamaz.";
         }
 
+        if (message.contains("Gecersiz kullanici rolu")) {
+            return "Geçersiz kullanıcı rolü.";
+        }
+
+        if (message.contains("Firma bilgisi zorunludur")) {
+            return "Firma bilgisi zorunludur.";
+        }
+
+        if (message.contains("Taseron temsilcisi icin taseron zorunludur")) {
+            return "Taşeron temsilcisi için taşeron zorunludur.";
+        }
+
+        if (message.contains("Sadece taseron temsilcisi taserona baglanabilir")) {
+            return "Sadece taşeron temsilcisi taşerona bağlanabilir.";
+        }
+
+        if (message.contains("Taseron bulunamadi veya pasif")) {
+            return "Taşeron bulunamadı veya pasif.";
+        }
+
+        if (message.contains("Duplicate entry") && message.contains("uq_kullanici_email")) {
+            return "Bu e-posta adresiyle kayıtlı kullanıcı zaten var.";
+        }
+
         return "Veritabanı işlemi tamamlanamadı.";
     }
 }

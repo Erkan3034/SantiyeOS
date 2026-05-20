@@ -25,4 +25,6 @@ public class Kullanici {
     private LocalDateTime sonGiris;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String firmaAd;
+    private String taseronAd;
 }

@@ -77,6 +77,7 @@ public class KullaniciRepositoryImpl implements KullaniciRepository {
                         new SqlParameter("p_taseron_id", Types.INTEGER),
                         new SqlParameter("p_ad", Types.VARCHAR),
                         new SqlParameter("p_soyad", Types.VARCHAR),
+                        new SqlParameter("p_email", Types.VARCHAR),
                         new SqlParameter("p_telefon", Types.VARCHAR),
                         new SqlParameter("p_rol", Types.VARCHAR),
                         new SqlParameter("p_aktif", Types.TINYINT)
@@ -151,6 +152,7 @@ public class KullaniciRepositoryImpl implements KullaniciRepository {
                 kullanici.getTaseronId(),
                 kullanici.getAd(),
                 kullanici.getSoyad(),
+                kullanici.getEmail(),
                 kullanici.getTelefon(),
                 kullanici.getRol(),
                 toTinyInt(kullanici.getAktif())
@@ -190,6 +192,8 @@ public class KullaniciRepositoryImpl implements KullaniciRepository {
                 .sonGiris(getLocalDateTime(rs, "son_giris"))
                 .createdAt(getLocalDateTime(rs, "created_at"))
                 .updatedAt(getLocalDateTime(rs, "updated_at"))
+                .firmaAd(rs.getString("firma_ad"))
+                .taseronAd(rs.getString("taseron_ad"))
                 .build();
     }
 
