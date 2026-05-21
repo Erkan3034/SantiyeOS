@@ -2,6 +2,7 @@ package com.santiyeos.api.security;
 
 import com.santiyeos.api.exception.BusinessException;
 import org.springframework.stereotype.Component;
+import com.santiyeos.api.security.CurrentUser;
 
 @Component
 public class CurrentUserContext {
@@ -61,5 +62,13 @@ public class CurrentUserContext {
         }
 
         return tokenTaseronId;
+    }
+
+    public boolean isSameFirma(Object principal, Integer firmaId) {
+        if (!(principal instanceof CurrentUser currentUser)) {
+            return false;
+        }
+
+        return firmaId != null && firmaId.equals(currentUser.getFirmaId());
     }
 }

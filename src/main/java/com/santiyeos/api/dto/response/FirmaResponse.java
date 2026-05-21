@@ -1,4 +1,4 @@
-package com.santiyeos.api.model;
+package com.santiyeos.api.dto.response;
 
 import lombok.Builder;
 import lombok.Data;
@@ -6,8 +6,8 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-@Builder
-public class Firma {
+@Builder // create constructor that have all fields
+public class FirmaResponse {
 
     private Integer firmaId;
     private String ad;
@@ -20,5 +20,3 @@ public class Firma {
     private LocalDateTime updatedAt;
 }
 
-
-//service use this model(process)

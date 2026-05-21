@@ -328,6 +328,15 @@ public class GlobalExceptionHandler {
             return "Bu e-posta adresiyle kayıtlı kullanıcı zaten var.";
         }
 
+
+        if (message.contains("vergi_no") || message.contains("uq_firma_vergi_no")) {
+            return "Bu vergi numarası ile kayıtlı bir firma zaten var.";
+        }
+
+        if (message.contains("email") || message.contains("uq_firma_email")) {
+            return "Bu e-posta adresi ile kayıtlı bir firma zaten var.";
+        }
+
         return "Veritabanı işlemi tamamlanamadı.";
     }
 }
