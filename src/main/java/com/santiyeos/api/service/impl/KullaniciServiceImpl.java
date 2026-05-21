@@ -12,6 +12,7 @@ import com.santiyeos.api.security.Roles;
 import com.santiyeos.api.service.KullaniciService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.santiyeos.api.service.AbonelikLimitService;
 
 import java.util.List;
 import java.util.Locale;
@@ -32,10 +33,12 @@ public class KullaniciServiceImpl implements KullaniciService {
 
     private final KullaniciRepository kullaniciRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AbonelikLimitService abonelikLimitService;
 
-    public KullaniciServiceImpl(KullaniciRepository kullaniciRepository, PasswordEncoder passwordEncoder) {
+    public KullaniciServiceImpl(KullaniciRepository kullaniciRepository, PasswordEncoder passwordEncoder, AbonelikLimitService abonelikLimitService) {
         this.kullaniciRepository = kullaniciRepository;
         this.passwordEncoder = passwordEncoder;
+        this.abonelikLimitService = abonelikLimitService;
     }
 
     @Override
@@ -92,6 +95,7 @@ public class KullaniciServiceImpl implements KullaniciService {
                 .telefon(request.getTelefon())
                 .build();
 
+        abonelikLimitService.kullaniciEklemeHakkiKontrolEt(safeFirmaId);
         Integer kullaniciId = kullaniciRepository.ekle(safeFirmaId, kullanici);
 
         if (kullaniciId == null) {

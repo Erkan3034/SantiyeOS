@@ -9,7 +9,7 @@ import com.santiyeos.api.model.Taseron;
 import com.santiyeos.api.repository.TaseronRepository;
 import com.santiyeos.api.service.TaseronService;
 import org.springframework.stereotype.Service;
-
+import com.santiyeos.api.service.AbonelikLimitService;
 import java.util.List;
 
 @Service
@@ -19,9 +19,10 @@ public class TaseronServiceImpl implements TaseronService {
     private static final int MAX_LIMIT = 100;
 
     private final TaseronRepository taseronRepository;
-
-    public TaseronServiceImpl(TaseronRepository taseronRepository) {
+    private final AbonelikLimitService abonelikLimitService;
+    public TaseronServiceImpl(TaseronRepository taseronRepository, AbonelikLimitService abonelikLimitService) {
         this.taseronRepository = taseronRepository;
+        this.abonelikLimitService = abonelikLimitService;
     }
 
     @Override
@@ -73,7 +74,7 @@ public class TaseronServiceImpl implements TaseronService {
                 .email(request.getEmail())
                 .uzmanlik(request.getUzmanlik())
                 .build();
-
+        abonelikLimitService.taseronEklemeHakkiKontrolEt(safeFirmaId);
         Integer taseronId = taseronRepository.ekle(safeFirmaId, taseron);
 
         if (taseronId == null) {

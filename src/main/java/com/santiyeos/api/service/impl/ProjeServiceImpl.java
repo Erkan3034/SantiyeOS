@@ -9,7 +9,7 @@ import com.santiyeos.api.model.Proje;
 import com.santiyeos.api.repository.ProjeRepository;
 import com.santiyeos.api.service.ProjeService;
 import org.springframework.stereotype.Service;
-
+import com.santiyeos.api.service.AbonelikLimitService;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Locale;
@@ -21,7 +21,7 @@ public class ProjeServiceImpl implements ProjeService {
     private static final int DEFAULT_LIMIT = 20;
     private static final int MAX_LIMIT = 100;
     private static final int DEFAULT_BUTCE_UYARI_YUZDE = 85;
-
+    private final AbonelikLimitService abonelikLimitService;
     private static final Set<String> PROJE_DURUMLARI = Set.of(
             "PLANLANDI",
             "DEVAM_EDIYOR",
@@ -31,7 +31,8 @@ public class ProjeServiceImpl implements ProjeService {
 
     private final ProjeRepository projeRepository;
 
-    public ProjeServiceImpl(ProjeRepository projeRepository) {
+    public ProjeServiceImpl(AbonelikLimitService abonelikLimitService, ProjeRepository projeRepository) {
+        this.abonelikLimitService = abonelikLimitService;
         this.projeRepository = projeRepository;
     }
 
@@ -85,7 +86,7 @@ public class ProjeServiceImpl implements ProjeService {
                 .bitisTarihi(request.getBitisTarihi())
                 .butceUyariYuzde(normalizeButceUyariYuzde(request.getButceUyariYuzde()))
                 .build();
-
+        abonelikLimitService.projeEklemeHakkiKontrolEt(safeFirmaId);
         Integer projeId = projeRepository.ekle(safeFirmaId, proje);
 
         if (projeId == null) {
