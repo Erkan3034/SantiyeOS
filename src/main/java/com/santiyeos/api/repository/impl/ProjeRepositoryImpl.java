@@ -38,6 +38,8 @@ public class ProjeRepositoryImpl implements ProjeRepository {
                 .withoutProcedureColumnMetaDataAccess()
                 .declareParameters(
                         new SqlParameter("p_firma_id", Types.INTEGER),
+                        new SqlParameter("p_kullanici_id", Types.INTEGER),
+                        new SqlParameter("p_rol", Types.VARCHAR),
                         new SqlParameter("p_durum", Types.VARCHAR),
                         new SqlParameter("p_limit", Types.INTEGER),
                         new SqlParameter("p_offset", Types.INTEGER),
@@ -50,7 +52,9 @@ public class ProjeRepositoryImpl implements ProjeRepository {
                 .withoutProcedureColumnMetaDataAccess()
                 .declareParameters(
                         new SqlParameter("p_proje_id", Types.INTEGER),
-                        new SqlParameter("p_firma_id", Types.INTEGER)
+                        new SqlParameter("p_firma_id", Types.INTEGER),
+                        new SqlParameter("p_kullanici_id", Types.INTEGER),
+                        new SqlParameter("p_rol", Types.VARCHAR)
                 )
                 .returningResultSet("items", projeRowMapper);
 
@@ -99,8 +103,8 @@ public class ProjeRepositoryImpl implements ProjeRepository {
     }
 
     @Override
-    public PageResult<Proje> listele(Integer firmaId, String durum, int limit, int offset) {
-        Map<String, Object> result = projeListeleCall.execute(firmaId, durum, limit, offset);
+    public PageResult<Proje> listele(Integer firmaId, Integer kullaniciId, String rol, String durum, int limit, int offset) {
+        Map<String, Object> result = projeListeleCall.execute(firmaId, kullaniciId, rol, durum, limit, offset);
 
         List<Proje> items = getItems(result);
         Integer total = (Integer) result.get("p_toplam");
@@ -109,8 +113,8 @@ public class ProjeRepositoryImpl implements ProjeRepository {
     }
 
     @Override
-    public Proje getir(Integer firmaId, Integer projeId) {
-        Map<String, Object> result = projeGetirCall.execute(projeId, firmaId);
+    public Proje getir(Integer firmaId, Integer kullaniciId, String rol, Integer projeId) {
+        Map<String, Object> result = projeGetirCall.execute(projeId, firmaId, kullaniciId, rol);
 
         List<Proje> items = getItems(result);
 

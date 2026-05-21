@@ -8,9 +8,9 @@ import com.santiyeos.api.model.PageResult;
 
 public interface ProjeService {
 
-    PageResult<ProjeResponse> listele(Integer firmaId, String durum, int limit, int offset);
+    PageResult<ProjeResponse> listele(Integer firmaId, Integer kullaniciId, String rol, String durum, int limit, int offset);
 
-    ProjeResponse getir(Integer firmaId, Integer projeId);
+    ProjeResponse getir(Integer firmaId, Integer kullaniciId, String rol, Integer projeId);
 
     ProjeResponse ekle(Integer firmaId, CreateProjeRequest request);
 

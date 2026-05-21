@@ -28,6 +28,11 @@ public class ProjeServiceImpl implements ProjeService {
             "TAMAMLANDI",
             "IPTAL"
     );
+    private static final Set<String> PROJE_OKUMA_ROLLERI = Set.of(
+            "SUPER_ADMIN",
+            "FIRMA_ADMIN",
+            "PROJE_YONETICISI"
+    );
 
     private final ProjeRepository projeRepository;
 
@@ -37,13 +42,22 @@ public class ProjeServiceImpl implements ProjeService {
     }
 
     @Override
-    public PageResult<ProjeResponse> listele(Integer firmaId, String durum, int limit, int offset) {
+    public PageResult<ProjeResponse> listele(Integer firmaId, Integer kullaniciId, String rol, String durum, int limit, int offset) {
         Integer safeFirmaId = validateFirmaId(firmaId);
+        String safeRol = validateProjeOkumaRolu(rol);
+        Integer safeKullaniciId = validateKullaniciIdIfRequired(kullaniciId, safeRol);
         String safeDurum = normalizeDurum(durum);
         int safeLimit = normalizeLimit(limit);
         int safeOffset = Math.max(offset, 0);
 
-        PageResult<Proje> result = projeRepository.listele(safeFirmaId, safeDurum, safeLimit, safeOffset);
+        PageResult<Proje> result = projeRepository.listele(
+                safeFirmaId,
+                safeKullaniciId,
+                safeRol,
+                safeDurum,
+                safeLimit,
+                safeOffset
+        );
 
         List<ProjeResponse> responseItems = result.getItems()
                 .stream()
@@ -59,11 +73,13 @@ public class ProjeServiceImpl implements ProjeService {
     }
 
     @Override
-    public ProjeResponse getir(Integer firmaId, Integer projeId) {
+    public ProjeResponse getir(Integer firmaId, Integer kullaniciId, String rol, Integer projeId) {
         Integer safeFirmaId = validateFirmaId(firmaId);
+        String safeRol = validateProjeOkumaRolu(rol);
+        Integer safeKullaniciId = validateKullaniciIdIfRequired(kullaniciId, safeRol);
         Integer safeProjeId = validateProjeId(projeId);
 
-        Proje proje = projeRepository.getir(safeFirmaId, safeProjeId);
+        Proje proje = projeRepository.getir(safeFirmaId, safeKullaniciId, safeRol, safeProjeId);
 
         if (proje == null) {
             throw BusinessException.notFound("Proje bulunamadı.");
@@ -93,7 +109,7 @@ public class ProjeServiceImpl implements ProjeService {
             throw BusinessException.conflict("Proje oluşturuldu ancak id alınamadı.");
         }
 
-        return getir(safeFirmaId, projeId);
+        return getir(safeFirmaId, null, "FIRMA_ADMIN", projeId);
     }
 
     @Override
@@ -120,7 +136,7 @@ public class ProjeServiceImpl implements ProjeService {
             throw BusinessException.notFound("Proje bulunamadı.");
         }
 
-        return getir(safeFirmaId, safeProjeId);
+        return getir(safeFirmaId, null, "FIRMA_ADMIN", safeProjeId);
     }
 
     @Override
@@ -190,6 +206,29 @@ public class ProjeServiceImpl implements ProjeService {
         }
 
         return normalized;
+    }
+
+    private String validateProjeOkumaRolu(String rol) {
+        if (rol == null || rol.isBlank()) {
+            throw BusinessException.badRequest("Geçerli bir kullanıcı rolü bulunamadı.");
+        }
+
+        String normalized = rol.trim().toUpperCase(Locale.ROOT);
+
+        if (!PROJE_OKUMA_ROLLERI.contains(normalized)) {
+            throw BusinessException.forbidden("Bu işlem için yetkiniz yok.");
+        }
+
+        return normalized;
+    }
+
+    private Integer validateKullaniciIdIfRequired(Integer kullaniciId, String rol) {
+        // Proje yoneticisi icin proje_kullanici tablosundan atama kontrolu yapilir.
+        if ("PROJE_YONETICISI".equals(rol)) {
+            return validateKullaniciId(kullaniciId);
+        }
+
+        return kullaniciId;
     }
 
     private BigDecimal normalizeButce(BigDecimal butce) {

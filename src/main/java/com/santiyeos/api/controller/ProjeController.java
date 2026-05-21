@@ -24,7 +24,7 @@ public class ProjeController {
         this.currentUserContext = currentUserContext;
     }
 
-    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI, T(com.santiyeos.api.security.Roles).SAHA_PERSONELI)")
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI)")
     @GetMapping
     public PageResult<ProjeResponse> listele(
             @AuthenticationPrincipal CurrentUser currentUser,
@@ -34,11 +34,12 @@ public class ProjeController {
             @RequestParam(defaultValue = "0") int offset
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        return projeService.listele(firmaId, durum, limit, offset);
+        Integer kullaniciId = currentUserContext.requireUserId(currentUser);
+        return projeService.listele(firmaId, kullaniciId, currentUser.getRol(), durum, limit, offset);
     }
 
 
-    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI, T(com.santiyeos.api.security.Roles).SAHA_PERSONELI)")
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI)")
     @GetMapping("/{projeId}")
     public ProjeResponse getir(
             @AuthenticationPrincipal CurrentUser currentUser,
@@ -46,7 +47,8 @@ public class ProjeController {
             @PathVariable Integer projeId
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        return projeService.getir(firmaId, projeId);
+        Integer kullaniciId = currentUserContext.requireUserId(currentUser);
+        return projeService.getir(firmaId, kullaniciId, currentUser.getRol(), projeId);
     }
 
 
