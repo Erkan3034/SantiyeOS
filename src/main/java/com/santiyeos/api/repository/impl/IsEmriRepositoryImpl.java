@@ -38,6 +38,8 @@ public class IsEmriRepositoryImpl implements IsEmriRepository {
                 .withoutProcedureColumnMetaDataAccess()
                 .declareParameters(
                         new SqlParameter("p_firma_id", Types.INTEGER),
+                        new SqlParameter("p_kullanici_id", Types.INTEGER),
+                        new SqlParameter("p_rol", Types.VARCHAR),
                         new SqlParameter("p_proje_id", Types.INTEGER),
                         new SqlParameter("p_taseron_id", Types.INTEGER),
                         new SqlParameter("p_durum", Types.VARCHAR),
@@ -53,6 +55,8 @@ public class IsEmriRepositoryImpl implements IsEmriRepository {
                 .declareParameters(
                         new SqlParameter("p_is_emri_id", Types.INTEGER),
                         new SqlParameter("p_firma_id", Types.INTEGER),
+                        new SqlParameter("p_kullanici_id", Types.INTEGER),
+                        new SqlParameter("p_rol", Types.VARCHAR),
                         new SqlParameter("p_taseron_id", Types.INTEGER)
                 )
                 .returningResultSet("items", isEmriRowMapper);
@@ -66,6 +70,7 @@ public class IsEmriRepositoryImpl implements IsEmriRepository {
                         new SqlParameter("p_taseron_id", Types.INTEGER),
                         new SqlParameter("p_atanan_id", Types.INTEGER),
                         new SqlParameter("p_olusturan_id", Types.INTEGER),
+                        new SqlParameter("p_rol", Types.VARCHAR),
                         new SqlParameter("p_baslik", Types.VARCHAR),
                         new SqlParameter("p_aciklama", Types.LONGVARCHAR),
                         new SqlParameter("p_oncelik", Types.VARCHAR),
@@ -81,6 +86,7 @@ public class IsEmriRepositoryImpl implements IsEmriRepository {
                         new SqlParameter("p_is_emri_id", Types.INTEGER),
                         new SqlParameter("p_firma_id", Types.INTEGER),
                         new SqlParameter("p_kullanici_id", Types.INTEGER),
+                        new SqlParameter("p_rol", Types.VARCHAR),
                         new SqlParameter("p_baslik", Types.VARCHAR),
                         new SqlParameter("p_aciklama", Types.LONGVARCHAR),
                         new SqlParameter("p_oncelik", Types.VARCHAR),
@@ -98,6 +104,7 @@ public class IsEmriRepositoryImpl implements IsEmriRepository {
                         new SqlParameter("p_firma_id", Types.INTEGER),
                         new SqlParameter("p_yeni_durum", Types.VARCHAR),
                         new SqlParameter("p_kullanici_id", Types.INTEGER),
+                        new SqlParameter("p_rol", Types.VARCHAR),
                         new SqlParameter("p_aciklama", Types.VARCHAR)
                 )
                 .returningResultSet("items", (rs, rowNum) -> rs.getInt("etkilenen_satir"));
@@ -108,7 +115,8 @@ public class IsEmriRepositoryImpl implements IsEmriRepository {
                 .declareParameters(
                         new SqlParameter("p_is_emri_id", Types.INTEGER),
                         new SqlParameter("p_firma_id", Types.INTEGER),
-                        new SqlParameter("p_kullanici_id", Types.INTEGER)
+                        new SqlParameter("p_kullanici_id", Types.INTEGER),
+                        new SqlParameter("p_rol", Types.VARCHAR)
                 )
                 .returningResultSet("items", (rs, rowNum) -> rs.getInt("etkilenen_satir"));
     }
@@ -117,6 +125,8 @@ public class IsEmriRepositoryImpl implements IsEmriRepository {
     @Override
     public PageResult<IsEmri> listele(
             Integer firmaId,
+            Integer kullaniciId,
+            String rol,
             Integer projeId,
             Integer taseronId,
             String durum,
@@ -125,6 +135,8 @@ public class IsEmriRepositoryImpl implements IsEmriRepository {
     ) {
         Map<String, Object> result = isEmriListeleCall.execute(
                 firmaId,
+                kullaniciId,
+                rol,
                 projeId,
                 taseronId,
                 durum,
@@ -139,8 +151,8 @@ public class IsEmriRepositoryImpl implements IsEmriRepository {
     }
 
     @Override
-    public IsEmri getir(Integer firmaId, Integer taseronId, Integer isEmriId) {
-        Map<String, Object> result = isEmriGetirCall.execute(isEmriId, firmaId, taseronId);
+    public IsEmri getir(Integer firmaId, Integer kullaniciId, String rol, Integer taseronId, Integer isEmriId) {
+        Map<String, Object> result = isEmriGetirCall.execute(isEmriId, firmaId, kullaniciId, rol, taseronId);
         List<IsEmri> items = getItems(result);
 
         if (items.isEmpty()) {
@@ -151,13 +163,14 @@ public class IsEmriRepositoryImpl implements IsEmriRepository {
     }
 
     @Override
-    public Integer ekle(Integer firmaId, Integer olusturanId, IsEmri isEmri) {
+    public Integer ekle(Integer firmaId, Integer olusturanId, String rol, IsEmri isEmri) {
         Map<String, Object> result = isEmriEkleCall.execute(
                 firmaId,
                 isEmri.getProjeId(),
                 isEmri.getTaseronId(),
                 isEmri.getAtananKullaniciId(),
                 olusturanId,
+                rol,
                 isEmri.getBaslik(),
                 isEmri.getAciklama(),
                 isEmri.getOncelik(),
@@ -175,11 +188,12 @@ public class IsEmriRepositoryImpl implements IsEmriRepository {
     }
 
     @Override
-    public Integer guncelle(Integer firmaId, Integer isEmriId, Integer kullaniciId, IsEmri isEmri) {
+    public Integer guncelle(Integer firmaId, Integer isEmriId, Integer kullaniciId, String rol, IsEmri isEmri) {
         Map<String, Object> result = isEmriGuncelleCall.execute(
                 isEmriId,
                 firmaId,
                 kullaniciId,
+                rol,
                 isEmri.getBaslik(),
                 isEmri.getAciklama(),
                 isEmri.getOncelik(),
@@ -198,12 +212,13 @@ public class IsEmriRepositoryImpl implements IsEmriRepository {
     }
 
     @Override
-    public Integer durumGuncelle(Integer firmaId, Integer isEmriId, Integer kullaniciId, String yeniDurum, String aciklama) {
+    public Integer durumGuncelle(Integer firmaId, Integer isEmriId, Integer kullaniciId, String rol, String yeniDurum, String aciklama) {
         Map<String, Object> result = isEmriDurumGuncelleCall.execute(
                 isEmriId,
                 firmaId,
                 yeniDurum,
                 kullaniciId,
+                rol,
                 aciklama
         );
 
@@ -217,8 +232,8 @@ public class IsEmriRepositoryImpl implements IsEmriRepository {
     }
 
     @Override
-    public Integer sil(Integer firmaId, Integer isEmriId, Integer kullaniciId) {
-        Map<String, Object> result = isEmriSilCall.execute(isEmriId, firmaId, kullaniciId);
+    public Integer sil(Integer firmaId, Integer isEmriId, Integer kullaniciId, String rol) {
+        Map<String, Object> result = isEmriSilCall.execute(isEmriId, firmaId, kullaniciId, rol);
         List<Integer> items = getItems(result);
 
         if (items.isEmpty()) {

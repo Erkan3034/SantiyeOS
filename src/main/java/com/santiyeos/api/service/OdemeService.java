@@ -6,11 +6,19 @@ import com.santiyeos.api.model.PageResult;
 
 public interface OdemeService {
 
-    PageResult<OdemeResponse> listele(Integer firmaId, Integer hakedisId, int limit, int offset);
+    PageResult<OdemeResponse> listele(
+            Integer firmaId,
+            Integer kullaniciId,
+            String rol,
+            Integer taseronId,
+            Integer hakedisId,
+            int limit,
+            int offset
+    );
 
-    OdemeResponse getir(Integer firmaId, Integer odemeId);
+    OdemeResponse getir(Integer firmaId, Integer kullaniciId, String rol, Integer taseronId, Integer odemeId);
 
-    OdemeResponse ekle(Integer firmaId, Integer kullaniciId, CreateOdemeRequest request);
+    OdemeResponse ekle(Integer firmaId, Integer kullaniciId, String rol, CreateOdemeRequest request);
 
-    void sil(Integer firmaId, Integer odemeId, Integer kullaniciId);
+    void sil(Integer firmaId, Integer odemeId, Integer kullaniciId, String rol);
 }

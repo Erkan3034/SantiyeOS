@@ -21,6 +21,13 @@ public class OdemeServiceImpl implements OdemeService {
     private static final int MAX_LIMIT = 100;
     private static final String DEFAULT_ODEME_YONTEMI = "HAVALE";
     private static final Set<String> ODEME_YONTEMLERI = Set.of("HAVALE", "EFT", "CEK", "NAKIT");
+    private static final Set<String> ODEME_GORUNTULEME_ROLLERI = Set.of(
+            "SUPER_ADMIN",
+            "FIRMA_ADMIN",
+            "PROJE_YONETICISI",
+            "SAHA_PERSONELI",
+            "TASERON_TEMSILCI"
+    );
 
     private final OdemeRepository odemeRepository;
 
@@ -29,13 +36,32 @@ public class OdemeServiceImpl implements OdemeService {
     }
 
     @Override
-    public PageResult<OdemeResponse> listele(Integer firmaId, Integer hakedisId, int limit, int offset) {
+    public PageResult<OdemeResponse> listele(
+            Integer firmaId,
+            Integer kullaniciId,
+            String rol,
+            Integer taseronId,
+            Integer hakedisId,
+            int limit,
+            int offset
+    ) {
         Integer safeFirmaId = validateFirmaId(firmaId);
-        Integer safeHakedisId = validateOptionalPositive(hakedisId, "Geçerli bir hakediş id giriniz.");
+        Integer safeKullaniciId = validateKullaniciId(kullaniciId);
+        String safeRol = validateRol(rol);
+        Integer safeTaseronId = validateOptionalPositive(taseronId, "Gecerli bir taseron id giriniz.");
+        Integer safeHakedisId = validateOptionalPositive(hakedisId, "Gecerli bir hakedis id giriniz.");
         int safeLimit = normalizeLimit(limit);
         int safeOffset = Math.max(offset, 0);
 
-        PageResult<Odeme> result = odemeRepository.listele(safeFirmaId, safeHakedisId, safeLimit, safeOffset);
+        PageResult<Odeme> result = odemeRepository.listele(
+                safeFirmaId,
+                safeKullaniciId,
+                safeRol,
+                safeTaseronId,
+                safeHakedisId,
+                safeLimit,
+                safeOffset
+        );
 
         List<OdemeResponse> responseItems = result.getItems()
                 .stream()
@@ -46,27 +72,31 @@ public class OdemeServiceImpl implements OdemeService {
     }
 
     @Override
-    public OdemeResponse getir(Integer firmaId, Integer odemeId) {
+    public OdemeResponse getir(Integer firmaId, Integer kullaniciId, String rol, Integer taseronId, Integer odemeId) {
         Integer safeFirmaId = validateFirmaId(firmaId);
+        Integer safeKullaniciId = validateKullaniciId(kullaniciId);
+        String safeRol = validateRol(rol);
+        Integer safeTaseronId = validateOptionalPositive(taseronId, "Gecerli bir taseron id giriniz.");
         Integer safeOdemeId = validateOdemeId(odemeId);
 
-        Odeme odeme = odemeRepository.getir(safeFirmaId, safeOdemeId);
+        Odeme odeme = odemeRepository.getir(safeFirmaId, safeKullaniciId, safeRol, safeTaseronId, safeOdemeId);
 
         if (odeme == null) {
-            throw BusinessException.notFound("Ödeme bulunamadı.");
+            throw BusinessException.notFound("Odeme bulunamadi.");
         }
 
         return toResponse(odeme);
     }
 
     @Override
-    public OdemeResponse ekle(Integer firmaId, Integer kullaniciId, CreateOdemeRequest request) {
+    public OdemeResponse ekle(Integer firmaId, Integer kullaniciId, String rol, CreateOdemeRequest request) {
         Integer safeFirmaId = validateFirmaId(firmaId);
         Integer safeKullaniciId = validateKullaniciId(kullaniciId);
+        String safeRol = validateRol(rol);
 
         Odeme odeme = Odeme.builder()
                 .firmaId(safeFirmaId)
-                .hakedisId(validatePositive(request.getHakedisId(), "Geçerli bir hakediş id giriniz."))
+                .hakedisId(validatePositive(request.getHakedisId(), "Gecerli bir hakedis id giriniz."))
                 .kaydedenId(safeKullaniciId)
                 .tutar(validateTutar(request.getTutar()))
                 .odemeTarihi(request.getOdemeTarihi())
@@ -74,38 +104,53 @@ public class OdemeServiceImpl implements OdemeService {
                 .aciklama(request.getAciklama())
                 .build();
 
-        Integer odemeId = odemeRepository.ekle(safeFirmaId, safeKullaniciId, odeme);
+        Integer odemeId = odemeRepository.ekle(safeFirmaId, safeKullaniciId, safeRol, odeme);
 
         if (odemeId == null) {
-            throw BusinessException.conflict("Ödeme oluşturuldu ancak id alınamadı.");
+            throw BusinessException.conflict("Odeme olusturuldu ancak id alinamadi.");
         }
 
-        return getir(safeFirmaId, odemeId);
+        return getir(safeFirmaId, safeKullaniciId, safeRol, null, odemeId);
     }
 
     @Override
-    public void sil(Integer firmaId, Integer odemeId, Integer kullaniciId) {
+    public void sil(Integer firmaId, Integer odemeId, Integer kullaniciId, String rol) {
         Integer safeFirmaId = validateFirmaId(firmaId);
         Integer safeOdemeId = validateOdemeId(odemeId);
         Integer safeKullaniciId = validateKullaniciId(kullaniciId);
+        String safeRol = validateRol(rol);
 
-        Integer etkilenenSatir = odemeRepository.sil(safeFirmaId, safeOdemeId, safeKullaniciId);
+        Integer etkilenenSatir = odemeRepository.sil(safeFirmaId, safeOdemeId, safeKullaniciId, safeRol);
 
         if (etkilenenSatir == null || etkilenenSatir == 0) {
-            throw BusinessException.notFound("Ödeme bulunamadı.");
+            throw BusinessException.notFound("Odeme bulunamadi.");
         }
     }
 
     private Integer validateFirmaId(Integer firmaId) {
-        return validatePositive(firmaId, "Geçerli bir firma id giriniz.");
+        return validatePositive(firmaId, "Gecerli bir firma id giriniz.");
     }
 
     private Integer validateOdemeId(Integer odemeId) {
-        return validatePositive(odemeId, "Geçerli bir ödeme id giriniz.");
+        return validatePositive(odemeId, "Gecerli bir odeme id giriniz.");
     }
 
     private Integer validateKullaniciId(Integer kullaniciId) {
-        return validatePositive(kullaniciId, "Geçerli bir kullanıcı id giriniz.");
+        return validatePositive(kullaniciId, "Gecerli bir kullanici id giriniz.");
+    }
+
+    private String validateRol(String rol) {
+        if (rol == null || rol.isBlank()) {
+            throw BusinessException.unauthorized("Gecerli kullanici rolu bulunamadi.");
+        }
+
+        String normalized = rol.trim().toUpperCase(Locale.ROOT);
+
+        if (!ODEME_GORUNTULEME_ROLLERI.contains(normalized)) {
+            throw BusinessException.forbidden("Bu islem icin yetkiniz yok.");
+        }
+
+        return normalized;
     }
 
     private Integer validatePositive(Integer value, String message) {
@@ -126,7 +171,7 @@ public class OdemeServiceImpl implements OdemeService {
 
     private BigDecimal validateTutar(BigDecimal tutar) {
         if (tutar == null || tutar.compareTo(BigDecimal.ZERO) <= 0) {
-            throw BusinessException.badRequest("Ödeme tutarı sıfırdan büyük olmalıdır.");
+            throw BusinessException.badRequest("Odeme tutari sifirdan buyuk olmalidir.");
         }
 
         return tutar;
@@ -148,7 +193,7 @@ public class OdemeServiceImpl implements OdemeService {
         String normalized = odemeYontemi.trim().toUpperCase(Locale.ROOT);
 
         if (!ODEME_YONTEMLERI.contains(normalized)) {
-            throw BusinessException.badRequest("Geçersiz ödeme yöntemi.");
+            throw BusinessException.badRequest("Gecersiz odeme yontemi.");
         }
 
         return normalized;

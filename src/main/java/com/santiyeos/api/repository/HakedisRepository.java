@@ -5,15 +5,23 @@ import com.santiyeos.api.model.PageResult;
 
 public interface HakedisRepository {
 
-    PageResult<Hakedis> listele(Integer firmaId, Integer taseronId, String onayDurumu, int limit, int offset);
+    PageResult<Hakedis> listele(
+            Integer firmaId,
+            Integer kullaniciId,
+            String rol,
+            Integer taseronId,
+            String onayDurumu,
+            int limit,
+            int offset
+    );
 
-    Hakedis getir(Integer firmaId,Integer taseronId, Integer hakedisId);
+    Hakedis getir(Integer firmaId, Integer kullaniciId, String rol, Integer taseronId, Integer hakedisId);
 
-    Integer ekle(Integer firmaId, Integer talepEdenId, Hakedis hakedis);
+    Integer ekle(Integer firmaId, Integer talepEdenId, String rol, Hakedis hakedis);
 
-    Integer onayla(Integer firmaId, Integer hakedisId, Integer onaylayanId);
+    Integer onayla(Integer firmaId, Integer hakedisId, Integer onaylayanId, String rol);
 
-    Integer reddet(Integer firmaId, Integer hakedisId, Integer onaylayanId, String redGerekce);
+    Integer reddet(Integer firmaId, Integer hakedisId, Integer onaylayanId, String rol, String redGerekce);
 
-    Integer sil(Integer firmaId, Integer hakedisId, Integer kullaniciId);
+    Integer sil(Integer firmaId, Integer hakedisId, Integer kullaniciId, String rol);
 }

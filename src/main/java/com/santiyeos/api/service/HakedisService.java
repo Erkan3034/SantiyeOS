@@ -7,15 +7,23 @@ import com.santiyeos.api.model.PageResult;
 
 public interface HakedisService {
 
-    PageResult<HakedisResponse> listele(Integer firmaId, Integer taseronId, String onayDurumu, int limit, int offset);
+    PageResult<HakedisResponse> listele(
+            Integer firmaId,
+            Integer kullaniciId,
+            String rol,
+            Integer taseronId,
+            String onayDurumu,
+            int limit,
+            int offset
+    );
 
-    HakedisResponse getir(Integer firmaId,Integer taseronId, Integer hakedisId);
+    HakedisResponse getir(Integer firmaId, Integer kullaniciId, String rol, Integer taseronId, Integer hakedisId);
 
-    HakedisResponse ekle(Integer firmaId, Integer kullaniciId, CreateHakedisRequest request);
+    HakedisResponse ekle(Integer firmaId, Integer kullaniciId, String rol, CreateHakedisRequest request);
 
-    HakedisResponse onayla(Integer firmaId, Integer hakedisId, Integer kullaniciId);
+    HakedisResponse onayla(Integer firmaId, Integer hakedisId, Integer kullaniciId, String rol);
 
-    HakedisResponse reddet(Integer firmaId, Integer hakedisId, Integer kullaniciId, RejectHakedisRequest request);
+    HakedisResponse reddet(Integer firmaId, Integer hakedisId, Integer kullaniciId, String rol, RejectHakedisRequest request);
 
-    void sil(Integer firmaId, Integer hakedisId, Integer kullaniciId);
+    void sil(Integer firmaId, Integer hakedisId, Integer kullaniciId, String rol);
 }

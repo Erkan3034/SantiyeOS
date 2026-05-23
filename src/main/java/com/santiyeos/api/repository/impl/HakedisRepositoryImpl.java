@@ -36,6 +36,8 @@ public class HakedisRepositoryImpl implements HakedisRepository {
                 .withoutProcedureColumnMetaDataAccess()
                 .declareParameters(
                         new SqlParameter("p_firma_id", Types.INTEGER),
+                        new SqlParameter("p_kullanici_id", Types.INTEGER),
+                        new SqlParameter("p_rol", Types.VARCHAR),
                         new SqlParameter("p_taseron_id", Types.INTEGER),
                         new SqlParameter("p_onay_durumu", Types.VARCHAR),
                         new SqlParameter("p_limit", Types.INTEGER),
@@ -50,6 +52,8 @@ public class HakedisRepositoryImpl implements HakedisRepository {
                 .declareParameters(
                         new SqlParameter("p_hakedis_id", Types.INTEGER),
                         new SqlParameter("p_firma_id", Types.INTEGER),
+                        new SqlParameter("p_kullanici_id", Types.INTEGER),
+                        new SqlParameter("p_rol", Types.VARCHAR),
                         new SqlParameter("p_taseron_id", Types.INTEGER)
                 )
                 .returningResultSet("items", hakedisRowMapper);
@@ -61,6 +65,7 @@ public class HakedisRepositoryImpl implements HakedisRepository {
                         new SqlParameter("p_firma_id", Types.INTEGER),
                         new SqlParameter("p_is_emri_id", Types.INTEGER),
                         new SqlParameter("p_talep_eden_id", Types.INTEGER),
+                        new SqlParameter("p_rol", Types.VARCHAR),
                         new SqlParameter("p_tutar", Types.DECIMAL),
                         new SqlParameter("p_aciklama", Types.LONGVARCHAR)
                 )
@@ -72,7 +77,8 @@ public class HakedisRepositoryImpl implements HakedisRepository {
                 .declareParameters(
                         new SqlParameter("p_hakedis_id", Types.INTEGER),
                         new SqlParameter("p_firma_id", Types.INTEGER),
-                        new SqlParameter("p_onaylayan_id", Types.INTEGER)
+                        new SqlParameter("p_onaylayan_id", Types.INTEGER),
+                        new SqlParameter("p_rol", Types.VARCHAR)
                 )
                 .returningResultSet("items", (rs, rowNum) -> rs.getInt("etkilenen_satir"));
 
@@ -83,6 +89,7 @@ public class HakedisRepositoryImpl implements HakedisRepository {
                         new SqlParameter("p_hakedis_id", Types.INTEGER),
                         new SqlParameter("p_firma_id", Types.INTEGER),
                         new SqlParameter("p_onaylayan_id", Types.INTEGER),
+                        new SqlParameter("p_rol", Types.VARCHAR),
                         new SqlParameter("p_red_gerekce", Types.LONGVARCHAR)
                 )
                 .returningResultSet("items", (rs, rowNum) -> rs.getInt("etkilenen_satir"));
@@ -93,14 +100,24 @@ public class HakedisRepositoryImpl implements HakedisRepository {
                 .declareParameters(
                         new SqlParameter("p_hakedis_id", Types.INTEGER),
                         new SqlParameter("p_firma_id", Types.INTEGER),
-                        new SqlParameter("p_kullanici_id", Types.INTEGER)
+                        new SqlParameter("p_kullanici_id", Types.INTEGER),
+                        new SqlParameter("p_rol", Types.VARCHAR)
                 )
                 .returningResultSet("items", (rs, rowNum) -> rs.getInt("etkilenen_satir"));
     }
 
     @Override
-    public PageResult<Hakedis> listele(Integer firmaId, Integer taseronId, String onayDurumu, int limit, int offset) {
-        Map<String, Object> result = hakedisListeleCall.execute(firmaId, taseronId, onayDurumu, limit, offset);
+    public PageResult<Hakedis> listele(Integer firmaId, Integer kullaniciId, String rol, Integer taseronId, String onayDurumu, int limit, int offset) {
+        Map<String, Object> result = hakedisListeleCall.execute(
+                firmaId,
+                kullaniciId,
+                rol,
+                taseronId,
+                onayDurumu,
+                limit,
+                offset
+        );
+
         List<Hakedis> items = getItems(result);
         Integer total = (Integer) result.get("p_toplam");
 
@@ -108,54 +125,55 @@ public class HakedisRepositoryImpl implements HakedisRepository {
     }
 
     @Override
-    public Hakedis getir(Integer firmaId,Integer taseronId, Integer hakedisId) {
-        Map<String, Object> result = hakedisGetirCall.execute(hakedisId, firmaId,taseronId);
+    public Hakedis getir(Integer firmaId, Integer kullaniciId, String rol, Integer taseronId, Integer hakedisId) {
+        Map<String, Object> result = hakedisGetirCall.execute(
+                hakedisId,
+                firmaId,
+                kullaniciId,
+                rol,
+                taseronId
+        );
+
         List<Hakedis> items = getItems(result);
-
-        if (items.isEmpty()) {
-            return null;
-        }
-
-        return items.get(0);
+        return items.isEmpty() ? null : items.get(0);
     }
 
     @Override
-    public Integer ekle(Integer firmaId, Integer talepEdenId, Hakedis hakedis) {
+    public Integer ekle(Integer firmaId, Integer talepEdenId, String rol, Hakedis hakedis) {
         Map<String, Object> result = hakedisEkleCall.execute(
                 firmaId,
                 hakedis.getIsEmriId(),
                 talepEdenId,
+                rol,
                 hakedis.getTutar(),
                 hakedis.getAciklama()
         );
 
         List<Integer> items = getItems(result);
-
-        if (items.isEmpty()) {
-            return null;
-        }
-
-        return items.get(0);
+        return items.isEmpty() ? null : items.get(0);
     }
 
     @Override
-    public Integer onayla(Integer firmaId, Integer hakedisId, Integer onaylayanId) {
-        Map<String, Object> result = hakedisOnaylaCall.execute(hakedisId, firmaId, onaylayanId);
+    public Integer onayla(Integer firmaId, Integer hakedisId, Integer onaylayanId, String rol) {
+        Map<String, Object> result = hakedisOnaylaCall.execute(hakedisId, firmaId, onaylayanId, rol);
         List<Integer> items = getItems(result);
+
         return items.isEmpty() ? 0 : items.get(0);
     }
 
     @Override
-    public Integer reddet(Integer firmaId, Integer hakedisId, Integer onaylayanId, String redGerekce) {
-        Map<String, Object> result = hakedisReddetCall.execute(hakedisId, firmaId, onaylayanId, redGerekce);
+    public Integer reddet(Integer firmaId, Integer hakedisId, Integer onaylayanId, String rol, String redGerekce) {
+        Map<String, Object> result = hakedisReddetCall.execute(hakedisId, firmaId, onaylayanId, rol, redGerekce);
         List<Integer> items = getItems(result);
+
         return items.isEmpty() ? 0 : items.get(0);
     }
 
     @Override
-    public Integer sil(Integer firmaId, Integer hakedisId, Integer kullaniciId) {
-        Map<String, Object> result = hakedisSilCall.execute(hakedisId, firmaId, kullaniciId);
+    public Integer sil(Integer firmaId, Integer hakedisId, Integer kullaniciId, String rol) {
+        Map<String, Object> result = hakedisSilCall.execute(hakedisId, firmaId, kullaniciId, rol);
         List<Integer> items = getItems(result);
+
         return items.isEmpty() ? 0 : items.get(0);
     }
 

@@ -36,6 +36,9 @@ public class OdemeRepositoryImpl implements OdemeRepository {
                 .withoutProcedureColumnMetaDataAccess()
                 .declareParameters(
                         new SqlParameter("p_firma_id", Types.INTEGER),
+                        new SqlParameter("p_kullanici_id", Types.INTEGER),
+                        new SqlParameter("p_rol", Types.VARCHAR),
+                        new SqlParameter("p_taseron_id", Types.INTEGER),
                         new SqlParameter("p_hakedis_id", Types.INTEGER),
                         new SqlParameter("p_limit", Types.INTEGER),
                         new SqlParameter("p_offset", Types.INTEGER),
@@ -48,7 +51,10 @@ public class OdemeRepositoryImpl implements OdemeRepository {
                 .withoutProcedureColumnMetaDataAccess()
                 .declareParameters(
                         new SqlParameter("p_odeme_id", Types.INTEGER),
-                        new SqlParameter("p_firma_id", Types.INTEGER)
+                        new SqlParameter("p_firma_id", Types.INTEGER),
+                        new SqlParameter("p_kullanici_id", Types.INTEGER),
+                        new SqlParameter("p_rol", Types.VARCHAR),
+                        new SqlParameter("p_taseron_id", Types.INTEGER)
                 )
                 .returningResultSet("items", odemeRowMapper);
 
@@ -59,6 +65,7 @@ public class OdemeRepositoryImpl implements OdemeRepository {
                         new SqlParameter("p_firma_id", Types.INTEGER),
                         new SqlParameter("p_hakedis_id", Types.INTEGER),
                         new SqlParameter("p_kaydeden_id", Types.INTEGER),
+                        new SqlParameter("p_rol", Types.VARCHAR),
                         new SqlParameter("p_tutar", Types.DECIMAL),
                         new SqlParameter("p_tarih", Types.DATE),
                         new SqlParameter("p_yontem", Types.VARCHAR),
@@ -72,14 +79,31 @@ public class OdemeRepositoryImpl implements OdemeRepository {
                 .declareParameters(
                         new SqlParameter("p_odeme_id", Types.INTEGER),
                         new SqlParameter("p_firma_id", Types.INTEGER),
-                        new SqlParameter("p_kullanici_id", Types.INTEGER)
+                        new SqlParameter("p_kullanici_id", Types.INTEGER),
+                        new SqlParameter("p_rol", Types.VARCHAR)
                 )
                 .returningResultSet("items", (rs, rowNum) -> rs.getInt("etkilenen_satir"));
     }
 
     @Override
-    public PageResult<Odeme> listele(Integer firmaId, Integer hakedisId, int limit, int offset) {
-        Map<String, Object> result = odemeListeleCall.execute(firmaId, hakedisId, limit, offset);
+    public PageResult<Odeme> listele(
+            Integer firmaId,
+            Integer kullaniciId,
+            String rol,
+            Integer taseronId,
+            Integer hakedisId,
+            int limit,
+            int offset
+    ) {
+        Map<String, Object> result = odemeListeleCall.execute(
+                firmaId,
+                kullaniciId,
+                rol,
+                taseronId,
+                hakedisId,
+                limit,
+                offset
+        );
         List<Odeme> items = getItems(result);
         Integer total = (Integer) result.get("p_toplam");
 
@@ -87,8 +111,8 @@ public class OdemeRepositoryImpl implements OdemeRepository {
     }
 
     @Override
-    public Odeme getir(Integer firmaId, Integer odemeId) {
-        Map<String, Object> result = odemeGetirCall.execute(odemeId, firmaId);
+    public Odeme getir(Integer firmaId, Integer kullaniciId, String rol, Integer taseronId, Integer odemeId) {
+        Map<String, Object> result = odemeGetirCall.execute(odemeId, firmaId, kullaniciId, rol, taseronId);
         List<Odeme> items = getItems(result);
 
         if (items.isEmpty()) {
@@ -99,11 +123,12 @@ public class OdemeRepositoryImpl implements OdemeRepository {
     }
 
     @Override
-    public Integer ekle(Integer firmaId, Integer kaydedenId, Odeme odeme) {
+    public Integer ekle(Integer firmaId, Integer kaydedenId, String rol, Odeme odeme) {
         Map<String, Object> result = odemeEkleCall.execute(
                 firmaId,
                 odeme.getHakedisId(),
                 kaydedenId,
+                rol,
                 odeme.getTutar(),
                 toSqlDate(odeme.getOdemeTarihi()),
                 odeme.getOdemeYontemi(),
@@ -120,13 +145,13 @@ public class OdemeRepositoryImpl implements OdemeRepository {
     }
 
     @Override
-    public Integer sil(Integer firmaId, Integer odemeId, Integer kullaniciId) {
-        Map<String, Object> result = odemeSilCall.execute(odemeId, firmaId, kullaniciId);
+    public Integer sil(Integer firmaId, Integer odemeId, Integer kullaniciId, String rol) {
+        Map<String, Object> result = odemeSilCall.execute(odemeId, firmaId, kullaniciId, rol);
         List<Integer> items = getItems(result);
         return items.isEmpty() ? 0 : items.get(0);
     }
 
-    // Ödeme result set'ini Java modeline çevirir.
+    // Stored procedure result set'ini Java modeline cevirir.
     private Odeme mapRowToOdeme(ResultSet rs, int rowNum) throws SQLException {
         return Odeme.builder()
                 .odemeId(rs.getInt("odeme_id"))

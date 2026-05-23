@@ -9,10 +9,9 @@ import com.santiyeos.api.security.CurrentUserContext;
 import com.santiyeos.api.service.HakedisService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.access.prepost.PreAuthorize;
-
 
 @RestController
 @RequestMapping("/api/hakedisler")
@@ -37,11 +36,19 @@ public class HakedisController {
             @RequestParam(defaultValue = "0") int offset
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
+        Integer kullaniciId = currentUserContext.requireUserId(currentUser);
         Integer scopedTaseronId = currentUserContext.resolveTaseronScope(currentUser, taseronId);
-        return hakedisService.listele(firmaId, scopedTaseronId, onayDurumu, limit, offset);
+
+        return hakedisService.listele(
+                firmaId,
+                kullaniciId,
+                currentUser.getRol(),
+                scopedTaseronId,
+                onayDurumu,
+                limit,
+                offset
+        );
     }
-
-
 
     @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI, T(com.santiyeos.api.security.Roles).SAHA_PERSONELI, T(com.santiyeos.api.security.Roles).TASERON_TEMSILCI)")
     @GetMapping("/{hakedisId}")
@@ -50,13 +57,18 @@ public class HakedisController {
             @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId,
             @PathVariable Integer hakedisId
     ) {
-
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
+        Integer kullaniciId = currentUserContext.requireUserId(currentUser);
         Integer scopedTaseronId = currentUserContext.resolveTaseronScope(currentUser, null);
-        return hakedisService.getir(firmaId,scopedTaseronId, hakedisId);
+
+        return hakedisService.getir(
+                firmaId,
+                kullaniciId,
+                currentUser.getRol(),
+                scopedTaseronId,
+                hakedisId
+        );
     }
-
-
 
     @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI, T(com.santiyeos.api.security.Roles).TASERON_TEMSILCI)")
     @PostMapping
@@ -67,11 +79,16 @@ public class HakedisController {
             @Valid @RequestBody CreateHakedisRequest request
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        currentUserContext.resolveTaseronScope(currentUser,null);
+        currentUserContext.resolveTaseronScope(currentUser, null);
         Integer kullaniciId = currentUserContext.requireUserId(currentUser);
-        return hakedisService.ekle(firmaId, kullaniciId, request);
-    }
 
+        return hakedisService.ekle(
+                firmaId,
+                kullaniciId,
+                currentUser.getRol(),
+                request
+        );
+    }
 
     @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI)")
     @PatchMapping("/{hakedisId}/onayla")
@@ -82,9 +99,14 @@ public class HakedisController {
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
         Integer kullaniciId = currentUserContext.requireUserId(currentUser);
-        return hakedisService.onayla(firmaId, hakedisId, kullaniciId);
-    }
 
+        return hakedisService.onayla(
+                firmaId,
+                hakedisId,
+                kullaniciId,
+                currentUser.getRol()
+        );
+    }
 
     @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI)")
     @PatchMapping("/{hakedisId}/reddet")
@@ -96,7 +118,14 @@ public class HakedisController {
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
         Integer kullaniciId = currentUserContext.requireUserId(currentUser);
-        return hakedisService.reddet(firmaId, hakedisId, kullaniciId, request);
+
+        return hakedisService.reddet(
+                firmaId,
+                hakedisId,
+                kullaniciId,
+                currentUser.getRol(),
+                request
+        );
     }
 
     @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN)")
@@ -109,6 +138,12 @@ public class HakedisController {
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
         Integer kullaniciId = currentUserContext.requireUserId(currentUser);
-        hakedisService.sil(firmaId, hakedisId, kullaniciId);
+
+        hakedisService.sil(
+                firmaId,
+                hakedisId,
+                kullaniciId,
+                currentUser.getRol()
+        );
     }
 }

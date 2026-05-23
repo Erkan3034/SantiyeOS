@@ -26,6 +26,13 @@ public class IsEmriServiceImpl implements IsEmriService {
     private static final Set<String> ONCELIKLER = Set.of("DUSUK", "NORMAL", "YUKSEK", "KRITIK");
     private static final Set<String> LISTE_DURUMLARI = Set.of("BEKLIYOR", "BASLADI", "DEVAM_EDIYOR", "TAMAMLANDI", "IPTAL", "HAKEDISTE");
     private static final Set<String> GUNCELLEME_DURUMLARI = Set.of("BEKLIYOR", "BASLADI", "DEVAM_EDIYOR", "TAMAMLANDI", "IPTAL");
+    private static final Set<String> IS_EMRI_ROLLERI = Set.of(
+            "SUPER_ADMIN",
+            "FIRMA_ADMIN",
+            "PROJE_YONETICISI",
+            "SAHA_PERSONELI",
+            "TASERON_TEMSILCI"
+    );
 
     private final IsEmriRepository isEmriRepository;
 
@@ -34,8 +41,19 @@ public class IsEmriServiceImpl implements IsEmriService {
     }
 
     @Override
-    public PageResult<IsEmriResponse> listele(Integer firmaId, Integer projeId,Integer taseronId, String durum, int limit, int offset) {
+    public PageResult<IsEmriResponse> listele(
+            Integer firmaId,
+            Integer kullaniciId,
+            String rol,
+            Integer projeId,
+            Integer taseronId,
+            String durum,
+            int limit,
+            int offset
+    ) {
         Integer safeFirmaId = validateFirmaId(firmaId);
+        Integer safeKullaniciId = validateKullaniciId(kullaniciId);
+        String safeRol = normalizeRol(rol);
         Integer safeProjeId = validateOptionalPositive(projeId, "Geçerli bir proje id giriniz.");
         Integer safeTaseronId = validateOptionalPositive(taseronId, "Geçerli bir taşeron id giriniz.");
         String safeDurum = normalizeDurum(durum, LISTE_DURUMLARI, true);
@@ -44,6 +62,8 @@ public class IsEmriServiceImpl implements IsEmriService {
 
         PageResult<IsEmri> result = isEmriRepository.listele(
                 safeFirmaId,
+                safeKullaniciId,
+                safeRol,
                 safeProjeId,
                 safeTaseronId,
                 safeDurum,
@@ -60,12 +80,14 @@ public class IsEmriServiceImpl implements IsEmriService {
     }
 
     @Override
-    public IsEmriResponse getir(Integer firmaId, Integer taseronId, Integer isEmriId) {
+    public IsEmriResponse getir(Integer firmaId, Integer kullaniciId, String rol, Integer taseronId, Integer isEmriId) {
         Integer safeFirmaId = validateFirmaId(firmaId);
+        Integer safeKullaniciId = validateKullaniciId(kullaniciId);
+        String safeRol = normalizeRol(rol);
         Integer safeIsEmriId = validateIsEmriId(isEmriId);
         Integer safeTaseronId = validateOptionalPositive(taseronId, "Geçerli bir taşeron id giriniz.");
 
-        IsEmri isEmri = isEmriRepository.getir(safeFirmaId,safeTaseronId, safeIsEmriId);
+        IsEmri isEmri = isEmriRepository.getir(safeFirmaId, safeKullaniciId, safeRol, safeTaseronId, safeIsEmriId);
 
         if (isEmri == null) {
             throw BusinessException.notFound("İş emri bulunamadı.");
@@ -75,9 +97,10 @@ public class IsEmriServiceImpl implements IsEmriService {
     }
 
     @Override
-    public IsEmriResponse ekle(Integer firmaId, Integer kullaniciId, CreateIsEmriRequest request) {
+    public IsEmriResponse ekle(Integer firmaId, Integer kullaniciId, String rol, CreateIsEmriRequest request) {
         Integer safeFirmaId = validateFirmaId(firmaId);
         Integer safeKullaniciId = validateKullaniciId(kullaniciId);
+        String safeRol = normalizeRol(rol);
         validateDateRange(request.getBaslangicTarihi(), request.getBitisTarihi());
 
         IsEmri isEmri = IsEmri.builder()
@@ -93,20 +116,21 @@ public class IsEmriServiceImpl implements IsEmriService {
                 .bitisTarihi(request.getBitisTarihi())
                 .build();
 
-        Integer isEmriId = isEmriRepository.ekle(safeFirmaId, safeKullaniciId, isEmri);
+        Integer isEmriId = isEmriRepository.ekle(safeFirmaId, safeKullaniciId, safeRol, isEmri);
 
         if (isEmriId == null) {
             throw BusinessException.conflict("İş emri oluşturuldu ancak id alınamadı.");
         }
 
-        return getir(safeFirmaId,null, isEmriId);
+        return getir(safeFirmaId, safeKullaniciId, safeRol, null, isEmriId);
     }
 
     @Override
-    public IsEmriResponse guncelle(Integer firmaId, Integer isEmriId, Integer kullaniciId, UpdateIsEmriRequest request) {
+    public IsEmriResponse guncelle(Integer firmaId, Integer isEmriId, Integer kullaniciId, String rol, UpdateIsEmriRequest request) {
         Integer safeFirmaId = validateFirmaId(firmaId);
         Integer safeIsEmriId = validateIsEmriId(isEmriId);
         Integer safeKullaniciId = validateKullaniciId(kullaniciId);
+        String safeRol = normalizeRol(rol);
         validateDateRange(request.getBaslangicTarihi(), request.getBitisTarihi());
 
         IsEmri isEmri = IsEmri.builder()
@@ -118,26 +142,28 @@ public class IsEmriServiceImpl implements IsEmriService {
                 .bitisTarihi(request.getBitisTarihi())
                 .build();
 
-        Integer etkilenenSatir = isEmriRepository.guncelle(safeFirmaId, safeIsEmriId, safeKullaniciId, isEmri);
+        Integer etkilenenSatir = isEmriRepository.guncelle(safeFirmaId, safeIsEmriId, safeKullaniciId, safeRol, isEmri);
 
         if (etkilenenSatir == null || etkilenenSatir == 0) {
             throw BusinessException.notFound("İş emri bulunamadı.");
         }
 
-        return getir(safeFirmaId,null, safeIsEmriId);
+        return getir(safeFirmaId, safeKullaniciId, safeRol, null, safeIsEmriId);
     }
 
     @Override
-    public IsEmriResponse durumGuncelle(Integer firmaId, Integer isEmriId, Integer kullaniciId, UpdateIsEmriDurumRequest request) {
+    public IsEmriResponse durumGuncelle(Integer firmaId, Integer isEmriId, Integer kullaniciId, String rol, UpdateIsEmriDurumRequest request) {
         Integer safeFirmaId = validateFirmaId(firmaId);
         Integer safeIsEmriId = validateIsEmriId(isEmriId);
         Integer safeKullaniciId = validateKullaniciId(kullaniciId);
+        String safeRol = normalizeRol(rol);
         String safeDurum = normalizeDurum(request.getDurum(), GUNCELLEME_DURUMLARI, false);
 
         Integer etkilenenSatir = isEmriRepository.durumGuncelle(
                 safeFirmaId,
                 safeIsEmriId,
                 safeKullaniciId,
+                safeRol,
                 safeDurum,
                 request.getAciklama()
         );
@@ -146,16 +172,17 @@ public class IsEmriServiceImpl implements IsEmriService {
             throw BusinessException.notFound("İş emri bulunamadı.");
         }
 
-        return getir(safeFirmaId,null, safeIsEmriId);
+        return getir(safeFirmaId, safeKullaniciId, safeRol, null, safeIsEmriId);
     }
 
     @Override
-    public void sil(Integer firmaId, Integer isEmriId, Integer kullaniciId) {
+    public void sil(Integer firmaId, Integer isEmriId, Integer kullaniciId, String rol) {
         Integer safeFirmaId = validateFirmaId(firmaId);
         Integer safeIsEmriId = validateIsEmriId(isEmriId);
         Integer safeKullaniciId = validateKullaniciId(kullaniciId);
+        String safeRol = normalizeRol(rol);
 
-        Integer etkilenenSatir = isEmriRepository.sil(safeFirmaId, safeIsEmriId, safeKullaniciId);
+        Integer etkilenenSatir = isEmriRepository.sil(safeFirmaId, safeIsEmriId, safeKullaniciId, safeRol);
 
         if (etkilenenSatir == null || etkilenenSatir == 0) {
             throw BusinessException.notFound("İş emri bulunamadı.");
@@ -188,6 +215,20 @@ public class IsEmriServiceImpl implements IsEmriService {
         }
 
         return validatePositive(value, message);
+    }
+
+    private String normalizeRol(String rol) {
+        if (rol == null || rol.isBlank()) {
+            throw BusinessException.badRequest("Geçerli bir kullanıcı rolü bulunamadı.");
+        }
+
+        String normalized = rol.trim().toUpperCase(Locale.ROOT);
+
+        if (!IS_EMRI_ROLLERI.contains(normalized)) {
+            throw BusinessException.forbidden("Bu işlem için yetkiniz yok.");
+        }
+
+        return normalized;
     }
 
     private int normalizeLimit(int limit) {

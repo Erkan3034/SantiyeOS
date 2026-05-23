@@ -192,6 +192,10 @@ public class GlobalExceptionHandler {
             return "Bu vergi numarası ile kayıtlı aktif taşeron zaten var.";
         }
 
+        if(message.contains("Bu proje icin yetkiniz yok.")){
+            return "Bu proje icin yetkiniz yok.";
+        }
+
         if (message.contains("Yetkisiz islem")) {
             return "Bu işlem için yetkiniz yok.";
         }

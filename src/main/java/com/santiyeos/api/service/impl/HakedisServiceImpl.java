@@ -20,7 +20,21 @@ public class HakedisServiceImpl implements HakedisService {
 
     private static final int DEFAULT_LIMIT = 20;
     private static final int MAX_LIMIT = 100;
-    private static final Set<String> ONAY_DURUMLARI = Set.of("BEKLIYOR", "ONAYLANDI", "REDDEDILDI", "ITIRAZDA");
+
+    private static final Set<String> ONAY_DURUMLARI = Set.of(
+            "BEKLIYOR",
+            "ONAYLANDI",
+            "REDDEDILDI",
+            "ITIRAZDA"
+    );
+
+    private static final Set<String> HAKEDIS_ROLLERI = Set.of(
+            "SUPER_ADMIN",
+            "FIRMA_ADMIN",
+            "PROJE_YONETICISI",
+            "SAHA_PERSONELI",
+            "TASERON_TEMSILCI"
+    );
 
     private final HakedisRepository hakedisRepository;
 
@@ -29,8 +43,18 @@ public class HakedisServiceImpl implements HakedisService {
     }
 
     @Override
-    public PageResult<HakedisResponse> listele(Integer firmaId, Integer taseronId, String onayDurumu, int limit, int offset) {
+    public PageResult<HakedisResponse> listele(
+            Integer firmaId,
+            Integer kullaniciId,
+            String rol,
+            Integer taseronId,
+            String onayDurumu,
+            int limit,
+            int offset
+    ) {
         Integer safeFirmaId = validateFirmaId(firmaId);
+        Integer safeKullaniciId = validateKullaniciId(kullaniciId);
+        String safeRol = normalizeRol(rol);
         Integer safeTaseronId = validateOptionalPositive(taseronId, "Geçerli bir taşeron id giriniz.");
         String safeOnayDurumu = normalizeOnayDurumu(onayDurumu, true);
         int safeLimit = normalizeLimit(limit);
@@ -38,6 +62,8 @@ public class HakedisServiceImpl implements HakedisService {
 
         PageResult<Hakedis> result = hakedisRepository.listele(
                 safeFirmaId,
+                safeKullaniciId,
+                safeRol,
                 safeTaseronId,
                 safeOnayDurumu,
                 safeLimit,
@@ -53,12 +79,20 @@ public class HakedisServiceImpl implements HakedisService {
     }
 
     @Override
-    public HakedisResponse getir(Integer firmaId,Integer taseronId, Integer hakedisId) {
+    public HakedisResponse getir(Integer firmaId, Integer kullaniciId, String rol, Integer taseronId, Integer hakedisId) {
         Integer safeFirmaId = validateFirmaId(firmaId);
-        Integer safeTaseronId = validateOptionalPositive(taseronId, "Geçerli bir taseron ID giriniz.");
+        Integer safeKullaniciId = validateKullaniciId(kullaniciId);
+        String safeRol = normalizeRol(rol);
+        Integer safeTaseronId = validateOptionalPositive(taseronId, "Geçerli bir taşeron id giriniz.");
         Integer safeHakedisId = validateHakedisId(hakedisId);
 
-        Hakedis hakedis = hakedisRepository.getir(safeFirmaId,safeTaseronId, safeHakedisId);
+        Hakedis hakedis = hakedisRepository.getir(
+                safeFirmaId,
+                safeKullaniciId,
+                safeRol,
+                safeTaseronId,
+                safeHakedisId
+        );
 
         if (hakedis == null) {
             throw BusinessException.notFound("Hakediş bulunamadı.");
@@ -68,9 +102,10 @@ public class HakedisServiceImpl implements HakedisService {
     }
 
     @Override
-    public HakedisResponse ekle(Integer firmaId, Integer kullaniciId, CreateHakedisRequest request) {
+    public HakedisResponse ekle(Integer firmaId, Integer kullaniciId, String rol, CreateHakedisRequest request) {
         Integer safeFirmaId = validateFirmaId(firmaId);
         Integer safeKullaniciId = validateKullaniciId(kullaniciId);
+        String safeRol = normalizeRol(rol);
 
         Hakedis hakedis = Hakedis.builder()
                 .firmaId(safeFirmaId)
@@ -80,40 +115,48 @@ public class HakedisServiceImpl implements HakedisService {
                 .aciklama(request.getAciklama())
                 .build();
 
-        Integer hakedisId = hakedisRepository.ekle(safeFirmaId, safeKullaniciId, hakedis);
+        Integer hakedisId = hakedisRepository.ekle(safeFirmaId, safeKullaniciId, safeRol, hakedis);
 
         if (hakedisId == null) {
             throw BusinessException.conflict("Hakediş oluşturuldu ancak id alınamadı.");
         }
 
-        return getir(safeFirmaId,null, hakedisId);
+        return getir(safeFirmaId, safeKullaniciId, safeRol, null, hakedisId);
     }
 
     @Override
-    public HakedisResponse onayla(Integer firmaId, Integer hakedisId, Integer kullaniciId) {
+    public HakedisResponse onayla(Integer firmaId, Integer hakedisId, Integer kullaniciId, String rol) {
         Integer safeFirmaId = validateFirmaId(firmaId);
         Integer safeHakedisId = validateHakedisId(hakedisId);
         Integer safeKullaniciId = validateKullaniciId(kullaniciId);
+        String safeRol = normalizeRol(rol);
 
-        Integer etkilenenSatir = hakedisRepository.onayla(safeFirmaId, safeHakedisId, safeKullaniciId);
+        Integer etkilenenSatir = hakedisRepository.onayla(
+                safeFirmaId,
+                safeHakedisId,
+                safeKullaniciId,
+                safeRol
+        );
 
         if (etkilenenSatir == null || etkilenenSatir == 0) {
             throw BusinessException.notFound("Hakediş bulunamadı.");
         }
 
-        return getir(safeFirmaId,null, safeHakedisId);
+        return getir(safeFirmaId, safeKullaniciId, safeRol, null, safeHakedisId);
     }
 
     @Override
-    public HakedisResponse reddet(Integer firmaId, Integer hakedisId, Integer kullaniciId, RejectHakedisRequest request) {
+    public HakedisResponse reddet(Integer firmaId, Integer hakedisId, Integer kullaniciId, String rol, RejectHakedisRequest request) {
         Integer safeFirmaId = validateFirmaId(firmaId);
         Integer safeHakedisId = validateHakedisId(hakedisId);
         Integer safeKullaniciId = validateKullaniciId(kullaniciId);
+        String safeRol = normalizeRol(rol);
 
         Integer etkilenenSatir = hakedisRepository.reddet(
                 safeFirmaId,
                 safeHakedisId,
                 safeKullaniciId,
+                safeRol,
                 request.getRedGerekce()
         );
 
@@ -121,16 +164,22 @@ public class HakedisServiceImpl implements HakedisService {
             throw BusinessException.notFound("Hakediş bulunamadı.");
         }
 
-        return getir(safeFirmaId,null, safeHakedisId);
+        return getir(safeFirmaId, safeKullaniciId, safeRol, null, safeHakedisId);
     }
 
     @Override
-    public void sil(Integer firmaId, Integer hakedisId, Integer kullaniciId) {
+    public void sil(Integer firmaId, Integer hakedisId, Integer kullaniciId, String rol) {
         Integer safeFirmaId = validateFirmaId(firmaId);
         Integer safeHakedisId = validateHakedisId(hakedisId);
         Integer safeKullaniciId = validateKullaniciId(kullaniciId);
+        String safeRol = normalizeRol(rol);
 
-        Integer etkilenenSatir = hakedisRepository.sil(safeFirmaId, safeHakedisId, safeKullaniciId);
+        Integer etkilenenSatir = hakedisRepository.sil(
+                safeFirmaId,
+                safeHakedisId,
+                safeKullaniciId,
+                safeRol
+        );
 
         if (etkilenenSatir == null || etkilenenSatir == 0) {
             throw BusinessException.notFound("Hakediş bulunamadı.");
@@ -163,6 +212,20 @@ public class HakedisServiceImpl implements HakedisService {
         }
 
         return validatePositive(value, message);
+    }
+
+    private String normalizeRol(String rol) {
+        if (rol == null || rol.isBlank()) {
+            throw BusinessException.badRequest("Geçerli bir kullanıcı rolü bulunamadı.");
+        }
+
+        String normalized = rol.trim().toUpperCase(Locale.ROOT);
+
+        if (!HAKEDIS_ROLLERI.contains(normalized)) {
+            throw BusinessException.forbidden("Bu işlem için yetkiniz yok.");
+        }
+
+        return normalized;
     }
 
     private BigDecimal validateTutar(BigDecimal tutar) {

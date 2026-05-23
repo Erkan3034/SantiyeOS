@@ -8,10 +8,9 @@ import com.santiyeos.api.security.CurrentUserContext;
 import com.santiyeos.api.service.OdemeService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.access.prepost.PreAuthorize;
-
 
 @RestController
 @RequestMapping("/api/odemeler")
@@ -25,20 +24,32 @@ public class OdemeController {
         this.currentUserContext = currentUserContext;
     }
 
-    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI, T(com.santiyeos.api.security.Roles).SAHA_PERSONELI)")
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI, T(com.santiyeos.api.security.Roles).SAHA_PERSONELI, T(com.santiyeos.api.security.Roles).TASERON_TEMSILCI)")
     @GetMapping
     public PageResult<OdemeResponse> listele(
             @AuthenticationPrincipal CurrentUser currentUser,
             @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId,
+            @RequestParam(required = false) Integer taseronId,
             @RequestParam(required = false) Integer hakedisId,
             @RequestParam(defaultValue = "20") int limit,
             @RequestParam(defaultValue = "0") int offset
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        return odemeService.listele(firmaId, hakedisId, limit, offset);
+        Integer kullaniciId = currentUserContext.requireUserId(currentUser);
+        Integer scopedTaseronId = currentUserContext.resolveTaseronScope(currentUser, taseronId);
+
+        return odemeService.listele(
+                firmaId,
+                kullaniciId,
+                currentUser.getRol(),
+                scopedTaseronId,
+                hakedisId,
+                limit,
+                offset
+        );
     }
 
-    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI, T(com.santiyeos.api.security.Roles).SAHA_PERSONELI)")
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI, T(com.santiyeos.api.security.Roles).SAHA_PERSONELI, T(com.santiyeos.api.security.Roles).TASERON_TEMSILCI)")
     @GetMapping("/{odemeId}")
     public OdemeResponse getir(
             @AuthenticationPrincipal CurrentUser currentUser,
@@ -46,9 +57,17 @@ public class OdemeController {
             @PathVariable Integer odemeId
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        return odemeService.getir(firmaId, odemeId);
-    }
+        Integer kullaniciId = currentUserContext.requireUserId(currentUser);
+        Integer scopedTaseronId = currentUserContext.resolveTaseronScope(currentUser, null);
 
+        return odemeService.getir(
+                firmaId,
+                kullaniciId,
+                currentUser.getRol(),
+                scopedTaseronId,
+                odemeId
+        );
+    }
 
     @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN)")
     @PostMapping
@@ -60,9 +79,14 @@ public class OdemeController {
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
         Integer kullaniciId = currentUserContext.requireUserId(currentUser);
-        return odemeService.ekle(firmaId, kullaniciId, request);
-    }
 
+        return odemeService.ekle(
+                firmaId,
+                kullaniciId,
+                currentUser.getRol(),
+                request
+        );
+    }
 
     @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN)")
     @DeleteMapping("/{odemeId}")
@@ -74,6 +98,12 @@ public class OdemeController {
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
         Integer kullaniciId = currentUserContext.requireUserId(currentUser);
-        odemeService.sil(firmaId, odemeId, kullaniciId);
+
+        odemeService.sil(
+                firmaId,
+                odemeId,
+                kullaniciId,
+                currentUser.getRol()
+        );
     }
 }

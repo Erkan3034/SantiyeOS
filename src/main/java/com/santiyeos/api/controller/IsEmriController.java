@@ -38,8 +38,9 @@ public class IsEmriController {
             @RequestParam(defaultValue = "0") int offset
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
+        Integer kullaniciId = currentUserContext.requireUserId(currentUser);
         Integer scopedTaseronId = currentUserContext.resolveTaseronScope(currentUser, taseronId);
-        return isEmriService.listele(firmaId, projeId,scopedTaseronId, durum, limit, offset);
+        return isEmriService.listele(firmaId, kullaniciId, currentUser.getRol(), projeId, scopedTaseronId, durum, limit, offset);
     }
 
 
@@ -51,8 +52,9 @@ public class IsEmriController {
             @PathVariable Integer isEmriId
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        Integer scopedTaseronId = currentUserContext.resolveTaseronScope(currentUser,null);
-        return isEmriService.getir(firmaId,scopedTaseronId, isEmriId);
+        Integer kullaniciId = currentUserContext.requireUserId(currentUser);
+        Integer scopedTaseronId = currentUserContext.resolveTaseronScope(currentUser, null);
+        return isEmriService.getir(firmaId, kullaniciId, currentUser.getRol(), scopedTaseronId, isEmriId);
     }
 
 
@@ -66,7 +68,7 @@ public class IsEmriController {
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
         Integer kullaniciId = currentUserContext.requireUserId(currentUser);
-        return isEmriService.ekle(firmaId, kullaniciId, request);
+        return isEmriService.ekle(firmaId, kullaniciId, currentUser.getRol(), request);
     }
 
 
@@ -80,7 +82,7 @@ public class IsEmriController {
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
         Integer kullaniciId = currentUserContext.requireUserId(currentUser);
-        return isEmriService.guncelle(firmaId, isEmriId, kullaniciId, request);
+        return isEmriService.guncelle(firmaId, isEmriId, kullaniciId, currentUser.getRol(), request);
     }
 
 
@@ -94,7 +96,7 @@ public class IsEmriController {
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
         Integer kullaniciId = currentUserContext.requireUserId(currentUser);
-        return isEmriService.durumGuncelle(firmaId, isEmriId, kullaniciId, request);
+        return isEmriService.durumGuncelle(firmaId, isEmriId, kullaniciId, currentUser.getRol(), request);
     }
 
     @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI)")
@@ -107,6 +109,6 @@ public class IsEmriController {
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
         Integer kullaniciId = currentUserContext.requireUserId(currentUser);
-        isEmriService.sil(firmaId, isEmriId, kullaniciId);
+        isEmriService.sil(firmaId, isEmriId, kullaniciId, currentUser.getRol());
     }
 }
