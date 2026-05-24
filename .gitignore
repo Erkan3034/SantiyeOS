@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+.env.example
+DEPLOYMENT.md
+roadmap_for_new_module
+
+

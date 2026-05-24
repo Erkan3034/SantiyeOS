@@ -256,10 +256,9 @@ public class GlobalExceptionHandler {
             DataAccessException exception,
             HttpServletRequest request
     ) {
-        log.error("Veritabani hatasi. Path: {}", request.getRequestURI(), exception);
-
         HttpStatus status = resolveDatabaseStatus(exception);
         String message = resolveDatabaseMessage(exception);
+        logDatabaseException(exception, request, status, message);
 
         ApiError error = buildError(
                 status,
@@ -269,6 +268,25 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(status).body(error);
+    }
+
+    private void logDatabaseException(
+            DataAccessException exception,
+            HttpServletRequest request,
+            HttpStatus status,
+            String message
+    ) {
+        if (status.is5xxServerError()) {
+            log.error("Veritabani hatasi. Path: {}", request.getRequestURI(), exception);
+            return;
+        }
+
+        log.warn(
+                "Veritabani is kurali hatasi. Path: {}, Status: {}, Message: {}",
+                request.getRequestURI(),
+                status.value(),
+                message
+        );
     }
 
     @ExceptionHandler(Exception.class)
@@ -305,19 +323,22 @@ public class GlobalExceptionHandler {
     }
 
     private HttpStatus resolveDatabaseStatus(DataAccessException exception) {
-        String databaseMessage = "";
+        String databaseMessage = resolveRawDatabaseMessage(exception);
 
-        Throwable rootCause = exception.getMostSpecificCause();
-        if (rootCause != null && rootCause.getMessage() != null) {
-            databaseMessage = rootCause.getMessage();
+        if (exception instanceof DataAccessResourceFailureException) {
+            return HttpStatus.SERVICE_UNAVAILABLE;
         }
 
         if (databaseMessage.contains("Yetkisiz islem")) {
             return HttpStatus.FORBIDDEN;
         }
 
-        if (exception instanceof DataAccessResourceFailureException) {
-            return HttpStatus.SERVICE_UNAVAILABLE;
+        if (databaseMessage.contains("bulunamadi")) {
+            return HttpStatus.NOT_FOUND;
+        }
+
+        if (isConflictDatabaseMessage(databaseMessage)) {
+            return HttpStatus.CONFLICT;
         }
 
         if (exception instanceof DuplicateKeyException) {
@@ -332,13 +353,31 @@ public class GlobalExceptionHandler {
     }
 
     private String resolveDatabaseMessage(DataAccessException exception) {
-        Throwable rootCause = exception.getMostSpecificCause();
+        String rawMessage = resolveRawDatabaseMessage(exception);
 
-        if (rootCause != null && rootCause.getMessage() != null) {
-            return cleanDatabaseMessage(rootCause.getMessage());
+        if (!rawMessage.isBlank()) {
+            return cleanDatabaseMessage(rawMessage);
         }
 
         return "Veritabani islemi tamamlanamadi.";
+    }
+
+    private String resolveRawDatabaseMessage(DataAccessException exception) {
+        Throwable rootCause = exception.getMostSpecificCause();
+
+        if (rootCause != null && rootCause.getMessage() != null) {
+            return rootCause.getMessage();
+        }
+
+        return "";
+    }
+
+    private boolean isConflictDatabaseMessage(String message) {
+        return message.contains("Duplicate entry")
+                || message.contains("zaten var")
+                || message.contains("limiti doldu")
+                || message.contains("aktif hakedis zaten var")
+                || message.contains("tamamlanamadi");
     }
 
     private String cleanDatabaseMessage(String message) {

@@ -59,6 +59,8 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler)
                 )
                 .authorizeHttpRequests(auth -> auth
+                        // Deploy platformlari uygulamanin ayakta olup olmadigini token gerektirmeden buradan kontrol eder.
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
                         // Dev profilinde Swagger tarayicida header gerekmeden acilir; prod profilinde tamamen kapanir.
                         .requestMatchers(SWAGGER_ENDPOINTS).access((authentication, context) ->

@@ -1,0 +1,10 @@
+target/
+!target/santiyeos-api-0.0.1.jar
+.git/
+.idea/
+.mvn/
+postman/
+scripts/
+*.iml
+HELP.md
+roadmap_for_new_module

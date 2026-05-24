@@ -1,11 +1,16 @@
 package com.santiyeos.api.exception;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.jdbc.UncategorizedSQLException;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+
+import java.sql.SQLException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -68,5 +73,79 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().message()).isEqualTo("Beklenmeyen bir hata olustu.");
+    }
+
+    @Test
+    void databaseConnectionFailureReturnsServiceUnavailable() {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/test");
+
+        var response = handler.handleDataAccessException(
+                new DataAccessResourceFailureException("connection failed"),
+                request
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().message()).isEqualTo("Veritabani islemi tamamlanamadi.");
+    }
+
+    @Test
+    void databaseDuplicateKeyReturnsConflict() {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/kullanicilar");
+
+        var response = handler.handleDataAccessException(
+                new DuplicateKeyException("Duplicate entry 'x' for key 'uq_kullanici_email'"),
+                request
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().message()).isEqualTo("Bu e-posta adresiyle kayitli kullanici zaten var.");
+    }
+
+    @Test
+    void databaseNotFoundSignalReturnsNotFound() {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/hakedisler/999");
+
+        var response = handler.handleDataAccessException(
+                databaseSignal("Hakedis bulunamadi."),
+                request
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().message()).isEqualTo("Hakedis bulunamadi.");
+    }
+
+    @Test
+    void databaseForbiddenSignalReturnsForbidden() {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/projeler");
+
+        var response = handler.handleDataAccessException(
+                databaseSignal("Yetkisiz islem."),
+                request
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().message()).isEqualTo("Bu islem icin yetkiniz yok.");
+    }
+
+    @Test
+    void databaseLimitSignalReturnsConflict() {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/projeler");
+
+        var response = handler.handleDataAccessException(
+                databaseSignal("Proje limiti doldu."),
+                request
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().message()).isEqualTo("Proje limiti doldu. Lutfen abonelik planinizi yukseltin.");
+    }
+
+    private UncategorizedSQLException databaseSignal(String message) {
+        return new UncategorizedSQLException("call procedure", "CALL test()", new SQLException(message));
     }
 }
