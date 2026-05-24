@@ -1,0 +1,297 @@
+{
+  "info": {
+    "name": "SantiyeOS API",
+    "description": "SantiyeOS backend smoke ve manuel API test collection.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "firmaId",
+      "value": "1"
+    },
+    {
+      "key": "email",
+      "value": "erkan@santiyeos.test"
+    },
+    {
+      "key": "sifre",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth - Login",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"sifre\": \"{{sifre}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('accessToken', body.accessToken);",
+              "pm.test('Token var', function () { pm.expect(body.accessToken).to.be.a('string').and.not.empty; });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth - Me",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "me"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Abonelik Planlari - Listele",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/abonelik-planlari?aktif=true",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "abonelik-planlari"
+          ],
+          "query": [
+            {
+              "key": "aktif",
+              "value": "true"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Projeler - Listele",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Firma-Id",
+            "value": "{{firmaId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/projeler?limit=20&offset=0",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "projeler"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "20"
+            },
+            {
+              "key": "offset",
+              "value": "0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Taseronlar - Listele",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Firma-Id",
+            "value": "{{firmaId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/taseronlar?limit=20&offset=0",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "taseronlar"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "20"
+            },
+            {
+              "key": "offset",
+              "value": "0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Is Emirleri - Listele",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Firma-Id",
+            "value": "{{firmaId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/is-emirleri?limit=20&offset=0",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "is-emirleri"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "20"
+            },
+            {
+              "key": "offset",
+              "value": "0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Hakedisler - Listele",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Firma-Id",
+            "value": "{{firmaId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/hakedisler?limit=20&offset=0",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "hakedisler"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "20"
+            },
+            {
+              "key": "offset",
+              "value": "0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Odemeler - Listele",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Firma-Id",
+            "value": "{{firmaId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/odemeler?limit=20&offset=0",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "odemeler"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "20"
+            },
+            {
+              "key": "offset",
+              "value": "0"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

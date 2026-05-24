@@ -1,6 +1,7 @@
 package com.santiyeos.api.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
@@ -9,11 +10,19 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.BindException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,12 +37,10 @@ public class GlobalExceptionHandler {
             BusinessException exception,
             HttpServletRequest request
     ) {
-        ApiError error = new ApiError(
-                LocalDateTime.now(),
-                exception.getStatus().value(),
-                exception.getStatus().getReasonPhrase(),
+        ApiError error = buildError(
+                exception.getStatus(),
                 exception.getMessage(),
-                request.getRequestURI(),
+                request,
                 List.of()
         );
 
@@ -51,12 +58,51 @@ public class GlobalExceptionHandler {
                 .map(error -> new ValidationError(error.getField(), error.getDefaultMessage()))
                 .toList();
 
-        ApiError error = new ApiError(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                "Validasyon hatası.",
-                request.getRequestURI(),
+        ApiError error = buildError(
+                HttpStatus.BAD_REQUEST,
+                "Validasyon hatasi.",
+                request,
+                validationErrors
+        );
+
+        return ResponseEntity.badRequest().body(error);
+    }
+
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<ApiError> handleBindException(
+            BindException exception,
+            HttpServletRequest request
+    ) {
+        List<ValidationError> validationErrors = exception.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> new ValidationError(error.getField(), error.getDefaultMessage()))
+                .toList();
+
+        ApiError error = buildError(
+                HttpStatus.BAD_REQUEST,
+                "Validasyon hatasi.",
+                request,
+                validationErrors
+        );
+
+        return ResponseEntity.badRequest().body(error);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiError> handleConstraintViolationException(
+            ConstraintViolationException exception,
+            HttpServletRequest request
+    ) {
+        List<ValidationError> validationErrors = exception.getConstraintViolations()
+                .stream()
+                .map(error -> new ValidationError(error.getPropertyPath().toString(), error.getMessage()))
+                .toList();
+
+        ApiError error = buildError(
+                HttpStatus.BAD_REQUEST,
+                "Validasyon hatasi.",
+                request,
                 validationErrors
         );
 
@@ -68,37 +114,142 @@ public class GlobalExceptionHandler {
             MissingRequestHeaderException exception,
             HttpServletRequest request
     ) {
-        ApiError error = new ApiError(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+        ApiError error = buildError(
+                HttpStatus.BAD_REQUEST,
                 "Zorunlu header eksik: " + exception.getHeaderName(),
-                request.getRequestURI(),
+                request,
                 List.of()
         );
 
         return ResponseEntity.badRequest().body(error);
     }
 
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiError> handleMissingParameterException(
+            MissingServletRequestParameterException exception,
+            HttpServletRequest request
+    ) {
+        ApiError error = buildError(
+                HttpStatus.BAD_REQUEST,
+                "Zorunlu parametre eksik: " + exception.getParameterName(),
+                request,
+                List.of()
+        );
 
-    //yetkilendirme hataları
+        return ResponseEntity.badRequest().body(error);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiError> handleTypeMismatchException(
+            MethodArgumentTypeMismatchException exception,
+            HttpServletRequest request
+    ) {
+        ApiError error = buildError(
+                HttpStatus.BAD_REQUEST,
+                "Parametre tipi hatali: " + exception.getName(),
+                request,
+                List.of()
+        );
+
+        return ResponseEntity.badRequest().body(error);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleMessageNotReadableException(
+            HttpMessageNotReadableException exception,
+            HttpServletRequest request
+    ) {
+        ApiError error = buildError(
+                HttpStatus.BAD_REQUEST,
+                "Istek govdesi okunamadi. JSON formatini kontrol edin.",
+                request,
+                List.of()
+        );
+
+        return ResponseEntity.badRequest().body(error);
+    }
+
+    @ExceptionHandler({
+            NoHandlerFoundException.class,
+            NoResourceFoundException.class
+    })
+    public ResponseEntity<ApiError> handleEndpointNotFoundException(
+            Exception exception,
+            HttpServletRequest request
+    ) {
+        ApiError error = buildError(
+                HttpStatus.NOT_FOUND,
+                "Endpoint bulunamadi.",
+                request,
+                List.of()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiError> handleMethodNotSupportedException(
+            HttpRequestMethodNotSupportedException exception,
+            HttpServletRequest request
+    ) {
+        ApiError error = buildError(
+                HttpStatus.METHOD_NOT_ALLOWED,
+                "Bu endpoint icin HTTP metodu desteklenmiyor.",
+                request,
+                List.of()
+        );
+
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(error);
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ApiError> handleMediaTypeNotSupportedException(
+            HttpMediaTypeNotSupportedException exception,
+            HttpServletRequest request
+    ) {
+        ApiError error = buildError(
+                HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                "Desteklenmeyen icerik tipi.",
+                request,
+                List.of()
+        );
+
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(error);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiError> handleIllegalArgumentException(
+            IllegalArgumentException exception,
+            HttpServletRequest request
+    ) {
+        String message = exception.getMessage() == null || exception.getMessage().isBlank()
+                ? "Gecersiz istek."
+                : exception.getMessage();
+
+        ApiError error = buildError(
+                HttpStatus.BAD_REQUEST,
+                message,
+                request,
+                List.of()
+        );
+
+        return ResponseEntity.badRequest().body(error);
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiError> handleAccessDeniedException(
             AccessDeniedException exception,
             HttpServletRequest request
     ) {
-        ApiError error = new ApiError(
-                LocalDateTime.now(),
-                HttpStatus.FORBIDDEN.value(),
-                HttpStatus.FORBIDDEN.getReasonPhrase(),
-                "Bu işlem için yetkiniz yok.",
-                request.getRequestURI(),
+        ApiError error = buildError(
+                HttpStatus.FORBIDDEN,
+                "Bu islem icin yetkiniz yok.",
+                request,
                 List.of()
         );
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
-
 
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<ApiError> handleDataAccessException(
@@ -110,12 +261,10 @@ public class GlobalExceptionHandler {
         HttpStatus status = resolveDatabaseStatus(exception);
         String message = resolveDatabaseMessage(exception);
 
-        ApiError error = new ApiError(
-                LocalDateTime.now(),
-                status.value(),
-                status.getReasonPhrase(),
+        ApiError error = buildError(
+                status,
                 message,
-                request.getRequestURI(),
+                request,
                 List.of()
         );
 
@@ -129,16 +278,30 @@ public class GlobalExceptionHandler {
     ) {
         log.error("Beklenmeyen hata. Path: {}", request.getRequestURI(), exception);
 
-        ApiError error = new ApiError(
-                LocalDateTime.now(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-                "Beklenmeyen bir hata oluştu.",
-                request.getRequestURI(),
+        ApiError error = buildError(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Beklenmeyen bir hata olustu.",
+                request,
                 List.of()
         );
 
         return ResponseEntity.internalServerError().body(error);
+    }
+
+    private ApiError buildError(
+            HttpStatus status,
+            String message,
+            HttpServletRequest request,
+            List<ValidationError> validationErrors
+    ) {
+        return new ApiError(
+                LocalDateTime.now(),
+                status.value(),
+                status.getReasonPhrase(),
+                message,
+                request.getRequestURI(),
+                validationErrors
+        );
     }
 
     private HttpStatus resolveDatabaseStatus(DataAccessException exception) {
@@ -168,7 +331,6 @@ public class GlobalExceptionHandler {
         return HttpStatus.BAD_REQUEST;
     }
 
-
     private String resolveDatabaseMessage(DataAccessException exception) {
         Throwable rootCause = exception.getMostSpecificCause();
 
@@ -176,140 +338,140 @@ public class GlobalExceptionHandler {
             return cleanDatabaseMessage(rootCause.getMessage());
         }
 
-        return "Veritabanı işlemi tamamlanamadı.";
+        return "Veritabani islemi tamamlanamadi.";
     }
 
     private String cleanDatabaseMessage(String message) {
         if (message.contains("Firma bulunamadi")) {
-            return "Firma bulunamadı veya pasif.";
+            return "Firma bulunamadi veya pasif.";
         }
 
         if (message.contains("Taseron adi zorunludur")) {
-            return "Taşeron adı zorunludur.";
+            return "Taseron adi zorunludur.";
         }
 
         if (message.contains("Bu vergi numarasi")) {
-            return "Bu vergi numarası ile kayıtlı aktif taşeron zaten var.";
+            return "Bu vergi numarasi ile kayitli aktif taseron zaten var.";
         }
 
-        if(message.contains("Bu proje icin yetkiniz yok.")){
+        if (message.contains("Bu proje icin yetkiniz yok.")) {
             return "Bu proje icin yetkiniz yok.";
         }
 
         if (message.contains("Yetkisiz islem")) {
-            return "Bu işlem için yetkiniz yok.";
+            return "Bu islem icin yetkiniz yok.";
         }
 
         if (message.contains("Taseron bulunamadi")) {
-            return "Taşeron bulunamadı.";
+            return "Taseron bulunamadi.";
         }
 
         if (message.contains("Aktif is emirleri olan taseron silinemez")) {
-            return "Aktif iş emirleri olan taşeron silinemez.";
+            return "Aktif is emirleri olan taseron silinemez.";
         }
 
         if (message.contains("Aktif is emirleri olan proje silinemez")) {
-            return "Aktif iş emirleri olan proje silinemez.";
+            return "Aktif is emirleri olan proje silinemez.";
         }
 
         if (message.contains("Is emri bulunamadi")) {
-            return "İş emri bulunamadı.";
+            return "Is emri bulunamadi.";
         }
 
         if (message.contains("Is emri basligi zorunludur")) {
-            return "İş emri başlığı zorunludur.";
+            return "Is emri basligi zorunludur.";
         }
 
         if (message.contains("Gecersiz is emri onceligi")) {
-            return "Geçersiz iş emri önceliği.";
+            return "Gecersiz is emri onceligi.";
         }
 
         if (message.contains("Gecersiz is emri durumu")) {
-            return "Geçersiz iş emri durumu.";
+            return "Gecersiz is emri durumu.";
         }
 
         if (message.contains("Proje bulunamadi veya aktif degil")) {
-            return "Proje bulunamadı veya aktif değil.";
+            return "Proje bulunamadi veya aktif degil.";
         }
 
         if (message.contains("Taseron bulunamadi veya pasif")) {
-            return "Taşeron bulunamadı veya pasif.";
+            return "Taseron bulunamadi veya pasif.";
         }
 
         if (message.contains("Atanan kullanici bulunamadi veya yetkisiz")) {
-            return "Atanan kullanıcı bulunamadı veya yetkisiz.";
+            return "Atanan kullanici bulunamadi veya yetkisiz.";
         }
 
         if (message.contains("Atanan taseron temsilcisi secilen taserona ait degil")) {
-            return "Atanan taşeron temsilcisi seçilen taşerona ait değil.";
+            return "Atanan taseron temsilcisi secilen taserona ait degil.";
         }
 
         if (message.contains("Bu is emri bu taseron kullanicisina ait degil")) {
-            return "Bu iş emri bu taşeron kullanıcısına ait değil.";
+            return "Bu is emri bu taseron kullanicisina ait degil.";
         }
 
         if (message.contains("Bitis tarihi baslangic tarihinden once olamaz")) {
-            return "Bitiş tarihi başlangıç tarihinden önce olamaz.";
+            return "Bitis tarihi baslangic tarihinden once olamaz.";
         }
 
         if (message.contains("Hakedis bulunamadi")) {
-            return "Hakediş bulunamadı.";
+            return "Hakedis bulunamadi.";
         }
 
         if (message.contains("Hakedis tutari sifirdan buyuk olmalidir")) {
-            return "Hakediş tutarı sıfırdan büyük olmalıdır.";
+            return "Hakedis tutari sifirdan buyuk olmalidir.";
         }
 
         if (message.contains("Hakedis sadece tamamlanmis is emirleri icin olusturulabilir")) {
-            return "Hakediş sadece tamamlanmış iş emirleri için oluşturulabilir.";
+            return "Hakedis sadece tamamlanmis is emirleri icin olusturulabilir.";
         }
 
         if (message.contains("Bu is emri icin aktif hakedis zaten var")) {
-            return "Bu iş emri için aktif hakediş zaten var.";
+            return "Bu is emri icin aktif hakedis zaten var.";
         }
 
         if (message.contains("Sadece bekleyen veya itirazdaki hakedis onaylanabilir")) {
-            return "Sadece bekleyen veya itirazdaki hakediş onaylanabilir.";
+            return "Sadece bekleyen veya itirazdaki hakedis onaylanabilir.";
         }
 
         if (message.contains("Sadece bekleyen veya itirazdaki hakedis reddedilebilir")) {
-            return "Sadece bekleyen veya itirazdaki hakediş reddedilebilir.";
+            return "Sadece bekleyen veya itirazdaki hakedis reddedilebilir.";
         }
 
         if (message.contains("Red gerekcesi zorunludur")) {
-            return "Red gerekçesi zorunludur.";
+            return "Red gerekcesi zorunludur.";
         }
 
         if (message.contains("Onaylanmis hakedis silinemez")) {
-            return "Onaylanmış hakediş silinemez.";
+            return "Onaylanmis hakedis silinemez.";
         }
 
         if (message.contains("Gecersiz hakedis onay durumu")) {
-            return "Geçersiz hakediş onay durumu.";
+            return "Gecersiz hakedis onay durumu.";
         }
 
         if (message.contains("Odeme bulunamadi")) {
-            return "Ödeme bulunamadı.";
+            return "Odeme bulunamadi.";
         }
 
         if (message.contains("Odeme tutari sifirdan buyuk olmalidir")) {
-            return "Ödeme tutarı sıfırdan büyük olmalıdır.";
+            return "Odeme tutari sifirdan buyuk olmalidir.";
         }
 
         if (message.contains("Gecersiz odeme yontemi")) {
-            return "Geçersiz ödeme yöntemi.";
+            return "Gecersiz odeme yontemi.";
         }
 
         if (message.contains("Sadece onaylanmis hakedislere odeme yapilabilir")) {
-            return "Sadece onaylanmış hakedişlere ödeme yapılabilir.";
+            return "Sadece onaylanmis hakedislere odeme yapilabilir.";
         }
 
         if (message.contains("Odeme tutari hakedis tutarini asamaz")) {
-            return "Ödeme tutarı hakediş tutarını aşamaz.";
+            return "Odeme tutari hakedis tutarini asamaz.";
         }
 
         if (message.contains("Gecersiz kullanici rolu")) {
-            return "Geçersiz kullanıcı rolü.";
+            return "Gecersiz kullanici rolu.";
         }
 
         if (message.contains("Firma bilgisi zorunludur")) {
@@ -317,30 +479,41 @@ public class GlobalExceptionHandler {
         }
 
         if (message.contains("Taseron temsilcisi icin taseron zorunludur")) {
-            return "Taşeron temsilcisi için taşeron zorunludur.";
+            return "Taseron temsilcisi icin taseron zorunludur.";
         }
 
         if (message.contains("Sadece taseron temsilcisi taserona baglanabilir")) {
-            return "Sadece taşeron temsilcisi taşerona bağlanabilir.";
+            return "Sadece taseron temsilcisi taserona baglanabilir.";
         }
 
-        if (message.contains("Taseron bulunamadi veya pasif")) {
-            return "Taşeron bulunamadı veya pasif.";
+        if (message.contains("Aktif abonelik bulunamadi")) {
+            return "Aktif abonelik bulunamadi.";
+        }
+
+        if (message.contains("Proje limiti doldu")) {
+            return "Proje limiti doldu. Lutfen abonelik planinizi yukseltin.";
+        }
+
+        if (message.contains("Kullanici limiti doldu")) {
+            return "Kullanici limiti doldu. Lutfen abonelik planinizi yukseltin.";
+        }
+
+        if (message.contains("Taseron limiti doldu")) {
+            return "Taseron limiti doldu. Lutfen abonelik planinizi yukseltin.";
         }
 
         if (message.contains("Duplicate entry") && message.contains("uq_kullanici_email")) {
-            return "Bu e-posta adresiyle kayıtlı kullanıcı zaten var.";
+            return "Bu e-posta adresiyle kayitli kullanici zaten var.";
         }
 
-
         if (message.contains("vergi_no") || message.contains("uq_firma_vergi_no")) {
-            return "Bu vergi numarası ile kayıtlı bir firma zaten var.";
+            return "Bu vergi numarasi ile kayitli bir firma zaten var.";
         }
 
         if (message.contains("email") || message.contains("uq_firma_email")) {
-            return "Bu e-posta adresi ile kayıtlı bir firma zaten var.";
+            return "Bu e-posta adresi ile kayitli bir firma zaten var.";
         }
 
-        return "Veritabanı işlemi tamamlanamadı.";
+        return "Veritabani islemi tamamlanamadi.";
     }
 }
