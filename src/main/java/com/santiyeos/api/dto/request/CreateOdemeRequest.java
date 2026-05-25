@@ -21,6 +21,7 @@ public class CreateOdemeRequest {
     @DecimalMin(value = "0.01", message = "Ödeme tutarı sıfırdan büyük olmalıdır")
     private BigDecimal tutar;
 
+    @NotNull(message = "Odeme tarihi zorunludur")
     private LocalDate odemeTarihi;
 
     @Pattern(

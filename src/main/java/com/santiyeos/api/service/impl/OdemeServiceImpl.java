@@ -10,6 +10,7 @@ import com.santiyeos.api.service.OdemeService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -99,7 +100,7 @@ public class OdemeServiceImpl implements OdemeService {
                 .hakedisId(validatePositive(request.getHakedisId(), "Gecerli bir hakedis id giriniz."))
                 .kaydedenId(safeKullaniciId)
                 .tutar(validateTutar(request.getTutar()))
-                .odemeTarihi(request.getOdemeTarihi())
+                .odemeTarihi(validateOdemeTarihi(request.getOdemeTarihi()))
                 .odemeYontemi(normalizeOdemeYontemi(request.getOdemeYontemi()))
                 .aciklama(request.getAciklama())
                 .build();
@@ -175,6 +176,14 @@ public class OdemeServiceImpl implements OdemeService {
         }
 
         return tutar;
+    }
+
+    private LocalDate validateOdemeTarihi(LocalDate odemeTarihi) {
+        if (odemeTarihi == null) {
+            throw BusinessException.badRequest("Odeme tarihi zorunludur.");
+        }
+
+        return odemeTarihi;
     }
 
     private int normalizeLimit(int limit) {

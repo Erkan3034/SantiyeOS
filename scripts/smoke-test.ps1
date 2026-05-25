@@ -59,6 +59,12 @@ Write-Host "[OK] Login"
 
 Invoke-SantiyeRequest -Name "Auth/me" -Method Get -Uri "$BaseUrl/api/auth/me" -Headers $headers
 Invoke-SantiyeRequest -Name "Abonelik planlari" -Method Get -Uri "$BaseUrl/api/abonelik-planlari?aktif=true" -Headers $headers
+Invoke-SantiyeRequest -Name "Dashboard ozet" -Method Get -Uri "$BaseUrl/api/dashboard/ozet" -Headers $headers
+Invoke-SantiyeRequest -Name "Lookup projeler" -Method Get -Uri "$BaseUrl/api/lookups/projeler" -Headers $headers
+Invoke-SantiyeRequest -Name "Lookup taseronlar" -Method Get -Uri "$BaseUrl/api/lookups/taseronlar" -Headers $headers
+Invoke-SantiyeRequest -Name "Lookup kullanicilar" -Method Get -Uri "$BaseUrl/api/lookups/kullanicilar" -Headers $headers
+Invoke-SantiyeRequest -Name "Lookup malzemeler" -Method Get -Uri "$BaseUrl/api/lookups/malzemeler" -Headers $headers
+Invoke-SantiyeRequest -Name "Lookup abonelik planlari" -Method Get -Uri "$BaseUrl/api/lookups/abonelik-planlari" -Headers $headers
 Invoke-SantiyeRequest -Name "Projeler" -Method Get -Uri "$BaseUrl/api/projeler?limit=5&offset=0" -Headers $headers
 Invoke-SantiyeRequest -Name "Taseronlar" -Method Get -Uri "$BaseUrl/api/taseronlar?limit=5&offset=0" -Headers $headers
 Invoke-SantiyeRequest -Name "Is emirleri" -Method Get -Uri "$BaseUrl/api/is-emirleri?limit=5&offset=0" -Headers $headers

@@ -134,6 +134,139 @@
       }
     },
     {
+      "name": "Dashboard - Ozet",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Firma-Id",
+            "value": "{{firmaId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/dashboard/ozet",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "dashboard",
+            "ozet"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Lookups - Projeler",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Firma-Id",
+            "value": "{{firmaId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/lookups/projeler",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "lookups",
+            "projeler"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Lookups - Taseronlar",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Firma-Id",
+            "value": "{{firmaId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/lookups/taseronlar",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "lookups",
+            "taseronlar"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Lookups - Kullanicilar",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Firma-Id",
+            "value": "{{firmaId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/lookups/kullanicilar",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "lookups",
+            "kullanicilar"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Lookups - Malzemeler",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Firma-Id",
+            "value": "{{firmaId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/lookups/malzemeler",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "lookups",
+            "malzemeler"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Lookups - Abonelik Planlari",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/lookups/abonelik-planlari",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "lookups",
+            "abonelik-planlari"
+          ]
+        }
+      }
+    },
+    {
       "name": "Projeler - Listele",
       "request": {
         "method": "GET",

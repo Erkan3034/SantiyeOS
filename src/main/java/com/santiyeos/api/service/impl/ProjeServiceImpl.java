@@ -11,6 +11,7 @@ import com.santiyeos.api.service.ProjeService;
 import org.springframework.stereotype.Service;
 import com.santiyeos.api.service.AbonelikLimitService;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -91,6 +92,7 @@ public class ProjeServiceImpl implements ProjeService {
     @Override
     public ProjeResponse ekle(Integer firmaId, CreateProjeRequest request) {
         Integer safeFirmaId = validateFirmaId(firmaId);
+        validateDateRange(request.getBaslangicTarihi(), request.getBitisTarihi());
 
         Proje proje = Proje.builder()
                 .firmaId(safeFirmaId)
@@ -116,6 +118,7 @@ public class ProjeServiceImpl implements ProjeService {
     public ProjeResponse guncelle(Integer firmaId, Integer projeId, UpdateProjeRequest request) {
         Integer safeFirmaId = validateFirmaId(firmaId);
         Integer safeProjeId = validateProjeId(projeId);
+        validateDateRange(request.getBaslangicTarihi(), request.getBitisTarihi());
 
         Proje proje = Proje.builder()
                 .firmaId(safeFirmaId)
@@ -236,6 +239,10 @@ public class ProjeServiceImpl implements ProjeService {
             return BigDecimal.ZERO;
         }
 
+        if (butce.compareTo(BigDecimal.ZERO) < 0) {
+            throw BusinessException.badRequest("Proje butcesi negatif olamaz.");
+        }
+
         return butce;
     }
 
@@ -244,7 +251,17 @@ public class ProjeServiceImpl implements ProjeService {
             return DEFAULT_BUTCE_UYARI_YUZDE;
         }
 
+        if (butceUyariYuzde < 1 || butceUyariYuzde > 99) {
+            throw BusinessException.badRequest("Butce uyari yuzdesi 1 ile 99 arasinda olmalidir.");
+        }
+
         return butceUyariYuzde;
+    }
+
+    private void validateDateRange(LocalDate baslangic, LocalDate bitis) {
+        if (baslangic != null && bitis != null && bitis.isBefore(baslangic)) {
+            throw BusinessException.badRequest("Proje bitis tarihi baslangic tarihinden once olamaz.");
+        }
     }
 
     // Model nesnesini dis dunyaya donen response DTO'suna ceviriyoruz.
