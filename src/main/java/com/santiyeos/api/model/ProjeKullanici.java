@@ -1,23 +1,23 @@
-package com.santiyeos.api.dto.response;
+package com.santiyeos.api.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AuthKullaniciResponse {
-
+public class ProjeKullanici {
+    private Integer projeId;
     private Integer kullaniciId;
     private Integer firmaId;
-    private Integer taseronId;
     private String ad;
     private String soyad;
-    private String email;
     private String rol;
-    private String telefon;
-    private Boolean sifreDegistirmeli;
+    private String email;
+    private LocalDateTime atanmaTarihi;
 }

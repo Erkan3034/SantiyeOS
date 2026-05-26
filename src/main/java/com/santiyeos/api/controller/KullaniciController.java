@@ -63,6 +63,7 @@ public class KullaniciController {
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
         validateSuperAdminRole(request.getRol());
+        validateFirmaAdminRoleChange(currentUser, request.getRol());
         return kullaniciService.ekle(firmaId, request);
     }
 
@@ -76,6 +77,7 @@ public class KullaniciController {
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
         validateSuperAdminRole(request.getRol());
+        validateFirmaAdminRoleChange(currentUser, request.getRol());
 
         if (currentUser.getKullaniciId().equals(kullaniciId) && Boolean.FALSE.equals(request.getAktif())) {
             throw BusinessException.badRequest("Kendi kullanıcınızı pasifleştiremezsiniz.");
@@ -110,13 +112,19 @@ public class KullaniciController {
             @PathVariable Integer kullaniciId,
             @Valid @RequestBody ResetKullaniciSifreRequest request
     ) {
-        currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
-        kullaniciService.sifreResetle(kullaniciId, request);
+        Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
+        kullaniciService.sifreResetle(firmaId, kullaniciId, request);
     }
 
     private void validateSuperAdminRole(String rol) {
         if (Roles.SUPER_ADMIN.equals(rol)) {
             throw BusinessException.badRequest("SUPER_ADMIN kullanıcıları bu endpoint üzerinden yönetilemez.");
+        }
+    }
+
+    private void validateFirmaAdminRoleChange(CurrentUser currentUser, String rol) {
+        if (!currentUser.isSuperAdmin() && Roles.FIRMA_ADMIN.equals(rol)) {
+            throw BusinessException.badRequest("Firma admin başka firma admin kullanıcısı oluşturamaz veya atayamaz.");
         }
     }
 }

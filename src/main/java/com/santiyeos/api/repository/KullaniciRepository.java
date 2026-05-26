@@ -15,5 +15,5 @@ public interface KullaniciRepository {
 
     Integer sil(Integer firmaId, Integer kullaniciId);
 
-    Integer sifreGuncelle(Integer kullaniciId, String sifreHash);
+    Integer sifreGuncelle(Integer kullaniciId, String sifreHash, Boolean sifreDegistirmeli);
 }

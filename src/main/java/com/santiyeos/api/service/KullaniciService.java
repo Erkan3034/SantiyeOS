@@ -20,6 +20,6 @@ public interface KullaniciService {
 
     void sil(Integer firmaId, Integer kullaniciId);
 
-    void  sifreResetle(Integer kullaniciId, ResetKullaniciSifreRequest request);
+    void sifreResetle(Integer firmaId, Integer kullaniciId, ResetKullaniciSifreRequest request);
 
 }

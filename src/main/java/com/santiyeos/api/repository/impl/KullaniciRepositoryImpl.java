@@ -98,7 +98,8 @@ public class KullaniciRepositoryImpl implements KullaniciRepository {
                 .withoutProcedureColumnMetaDataAccess()
                 .declareParameters(
                         new SqlParameter("p_kullanici_id", Types.INTEGER),
-                        new SqlParameter("p_sifre_hash", Types.VARCHAR)
+                        new SqlParameter("p_sifre_hash", Types.VARCHAR),
+                        new SqlParameter("p_sifre_degistirmeli", Types.TINYINT)
                 )
                 .returningResultSet("items", (rs, rowNum) -> rs.getInt("etkilenen_satir"));
     }
@@ -171,8 +172,8 @@ public class KullaniciRepositoryImpl implements KullaniciRepository {
     }
 
     @Override
-    public Integer sifreGuncelle(Integer kullaniciId, String sifreHash) {
-        Map<String, Object> result = kullaniciSifreGuncelleCall.execute(kullaniciId, sifreHash);
+    public Integer sifreGuncelle(Integer kullaniciId, String sifreHash, Boolean sifreDegistirmeli) {
+        Map<String, Object> result = kullaniciSifreGuncelleCall.execute(kullaniciId, sifreHash, toTinyInt(sifreDegistirmeli));
         List<Integer> items = getItems(result);
 
         return items.isEmpty() ? 0 : items.get(0);
@@ -189,6 +190,7 @@ public class KullaniciRepositoryImpl implements KullaniciRepository {
                 .rol(rs.getString("rol"))
                 .telefon(rs.getString("telefon"))
                 .aktif(rs.getBoolean("aktif"))
+                .sifreDegistirmeli(getBoolean(rs, "sifre_degistirmeli"))
                 .sonGiris(getLocalDateTime(rs, "son_giris"))
                 .createdAt(getLocalDateTime(rs, "created_at"))
                 .updatedAt(getLocalDateTime(rs, "updated_at"))
@@ -213,6 +215,11 @@ public class KullaniciRepositoryImpl implements KullaniciRepository {
 
     private Integer getInteger(ResultSet rs, String columnName) throws SQLException {
         int value = rs.getInt(columnName);
+        return rs.wasNull() ? null : value;
+    }
+
+    private Boolean getBoolean(ResultSet rs, String columnName) throws SQLException {
+        boolean value = rs.getBoolean(columnName);
         return rs.wasNull() ? null : value;
     }
 

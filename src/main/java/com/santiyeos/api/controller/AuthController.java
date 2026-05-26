@@ -1,5 +1,6 @@
 package com.santiyeos.api.controller;
 
+import com.santiyeos.api.dto.request.ChangePasswordRequest;
 import com.santiyeos.api.dto.request.LoginRequest;
 import com.santiyeos.api.dto.response.AuthKullaniciResponse;
 import com.santiyeos.api.dto.response.AuthResponse;
@@ -27,5 +28,13 @@ public class AuthController {
     @GetMapping("/me")
     public AuthKullaniciResponse me(@AuthenticationPrincipal CurrentUser currentUser) {
         return authService.me(currentUser);
+    }
+
+    @PatchMapping("/sifre-degistir")
+    public AuthKullaniciResponse sifreDegistir(
+            @AuthenticationPrincipal CurrentUser currentUser,
+            @Valid @RequestBody ChangePasswordRequest request
+    ) {
+        return authService.sifreDegistir(currentUser, request);
     }
 }

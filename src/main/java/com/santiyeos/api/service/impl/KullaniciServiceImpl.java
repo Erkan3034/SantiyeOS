@@ -58,10 +58,11 @@ public class KullaniciServiceImpl implements KullaniciService {
 
         List<KullaniciResponse> responseItems = result.getItems()
                 .stream()
+                .filter(kullanici -> isFirmaScopedUser(kullanici, safeFirmaId))
                 .map(this::toResponse)
                 .toList();
 
-        return new PageResult<>(responseItems, result.getTotal(), result.getLimit(), result.getOffset());
+        return new PageResult<>(responseItems, responseItems.size(), result.getLimit(), result.getOffset());
     }
 
     @Override
@@ -71,7 +72,7 @@ public class KullaniciServiceImpl implements KullaniciService {
 
         Kullanici kullanici = kullaniciRepository.getir(safeFirmaId, safeKullaniciId);
 
-        if (kullanici == null) {
+        if (!isFirmaScopedUser(kullanici, safeFirmaId)) {
             throw BusinessException.notFound("Kullanıcı bulunamadı.");
         }
 
@@ -144,12 +145,19 @@ public class KullaniciServiceImpl implements KullaniciService {
     }
 
     @Override
-    public void sifreResetle(Integer kullaniciId, ResetKullaniciSifreRequest request) {
+    public void sifreResetle(Integer firmaId, Integer kullaniciId, ResetKullaniciSifreRequest request) {
+        Integer safeFirmaId = validateFirmaId(firmaId);
         Integer safeKullaniciId = validatePositive(kullaniciId, "Geçerli bir kullanıcı id giriniz.");
+        Kullanici kullanici = kullaniciRepository.getir(safeFirmaId, safeKullaniciId);
+
+        if (!isFirmaScopedUser(kullanici, safeFirmaId)) {
+            throw BusinessException.notFound("Kullanıcı bulunamadı.");
+        }
 
         Integer etkilenenSatir = kullaniciRepository.sifreGuncelle(
                 safeKullaniciId,
-                passwordEncoder.encode(request.getYeniSifre())
+                passwordEncoder.encode(request.getYeniSifre()),
+                true
         );
 
         if (etkilenenSatir == null || etkilenenSatir == 0) {
@@ -213,6 +221,13 @@ public class KullaniciServiceImpl implements KullaniciService {
         }
     }
 
+    private boolean isFirmaScopedUser(Kullanici kullanici, Integer firmaId) {
+        return kullanici != null
+                && firmaId != null
+                && firmaId.equals(kullanici.getFirmaId())
+                && !Roles.SUPER_ADMIN.equals(kullanici.getRol());
+    }
+
     private KullaniciResponse toResponse(Kullanici kullanici) {
         return KullaniciResponse.builder()
                 .kullaniciId(kullanici.getKullaniciId())
@@ -224,6 +239,7 @@ public class KullaniciServiceImpl implements KullaniciService {
                 .rol(kullanici.getRol())
                 .telefon(kullanici.getTelefon())
                 .aktif(kullanici.getAktif())
+                .sifreDegistirmeli(kullanici.getSifreDegistirmeli())
                 .sonGiris(kullanici.getSonGiris())
                 .createdAt(kullanici.getCreatedAt())
                 .updatedAt(kullanici.getUpdatedAt())

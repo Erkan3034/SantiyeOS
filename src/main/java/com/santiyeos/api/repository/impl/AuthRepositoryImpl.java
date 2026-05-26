@@ -75,6 +75,7 @@ public class AuthRepositoryImpl implements AuthRepository {
                 .rol(rs.getString("rol"))
                 .telefon(rs.getString("telefon"))
                 .aktif(getBoolean(rs, "aktif"))
+                .sifreDegistirmeli(getBoolean(rs, "sifre_degistirmeli"))
                 .sonGiris(getLocalDateTime(rs, "son_giris"))
                 .createdAt(getLocalDateTime(rs, "created_at"))
                 .updatedAt(getLocalDateTime(rs, "updated_at"))

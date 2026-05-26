@@ -17,6 +17,7 @@ public class KullaniciResponse {
     private String rol;
     private String telefon;
     private Boolean aktif;
+    private Boolean sifreDegistirmeli;
     private LocalDateTime sonGiris;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
