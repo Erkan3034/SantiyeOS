@@ -24,7 +24,7 @@ public class OdemeController {
         this.currentUserContext = currentUserContext;
     }
 
-    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI, T(com.santiyeos.api.security.Roles).SAHA_PERSONELI, T(com.santiyeos.api.security.Roles).TASERON_TEMSILCI)")
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI)")
     @GetMapping
     public PageResult<OdemeResponse> listele(
             @AuthenticationPrincipal CurrentUser currentUser,
@@ -49,7 +49,7 @@ public class OdemeController {
         );
     }
 
-    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI, T(com.santiyeos.api.security.Roles).SAHA_PERSONELI, T(com.santiyeos.api.security.Roles).TASERON_TEMSILCI)")
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI)")
     @GetMapping("/{odemeId}")
     public OdemeResponse getir(
             @AuthenticationPrincipal CurrentUser currentUser,

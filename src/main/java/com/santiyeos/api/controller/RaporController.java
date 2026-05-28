@@ -30,7 +30,7 @@ public class RaporController {
     }
 
     @GetMapping("/genel-ozet")
-    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN)")
+    @PreAuthorize("hasAnyRole(T(com.santiyeos.api.security.Roles).SUPER_ADMIN, T(com.santiyeos.api.security.Roles).FIRMA_ADMIN, T(com.santiyeos.api.security.Roles).PROJE_YONETICISI)")
     public GenelOzetRaporuResponse genelOzet(
             @AuthenticationPrincipal CurrentUser currentUser,
             @RequestHeader(value = "X-Firma-Id", required = false) Integer requestedFirmaId
