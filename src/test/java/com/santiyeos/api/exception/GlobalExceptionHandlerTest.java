@@ -86,7 +86,7 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().message()).isEqualTo("Veritabani islemi tamamlanamadi.");
+        assertThat(response.getBody().message()).isEqualTo("Veri işlemi bilinmeyen bir nedenle tamamlanamadı.");
     }
 
     @Test
