@@ -76,8 +76,13 @@ public class KullaniciController {
             @Valid @RequestBody UpdateKullaniciRequest request
     ) {
         Integer firmaId = currentUserContext.resolveFirmaId(currentUser, requestedFirmaId);
+        KullaniciResponse mevcutKullanici = kullaniciService.getir(firmaId, kullaniciId);
         validateSuperAdminRole(request.getRol());
-        validateFirmaAdminRoleChange(currentUser, request.getRol());
+
+        // Rol değişikliği kontrolü: Eğer yeni rol FIRMA_ADMIN ise ve mevcut rol FIRMA_ADMIN değilse, sadece SUPER_ADMIN bu değişikliği yapabilir.
+        if (!currentUser.isSuperAdmin() && Roles.FIRMA_ADMIN.equals(request.getRol()) && !Roles.FIRMA_ADMIN.equals(mevcutKullanici.getRol())) {
+            throw BusinessException.badRequest("Firma admin başka firma admin kullanıcısı oluşturamaz veya atayamaz.");
+        }
 
         if (currentUser.getKullaniciId().equals(kullaniciId) && Boolean.FALSE.equals(request.getAktif())) {
             throw BusinessException.badRequest("Kendi kullanıcınızı pasifleştiremezsiniz.");

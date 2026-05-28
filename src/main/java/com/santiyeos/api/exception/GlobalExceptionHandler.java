@@ -553,6 +553,6 @@ public class GlobalExceptionHandler {
             return "Bu e-posta adresi ile kayitli bir firma zaten var.";
         }
 
-        return "Veritabani islemi tamamlanamadi.";
+        return "Veri işlemi bilinmeyen bir nedenle tamamlanamadı.";
     }
 }
