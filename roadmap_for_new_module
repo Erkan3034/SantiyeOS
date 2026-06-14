@@ -1,9 +1,0 @@
-1. DB table + stored procedures
-2. Model
-3. DTO
-4. Repository interface
-5. RepositoryImpl
-6. Service interface
-7. ServiceImpl
-8. Controller
-9. Postman test
